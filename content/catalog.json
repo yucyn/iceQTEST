@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "courses": [
+    "courses/neutral-faceoff-regroup.json",
+    "courses/post-up-regroup.json",
+    "courses/zone-breakout.json",
+    "courses/give-and-go.json",
+    "courses/two-on-one.json",
+    "courses/defensive-side.json",
+    "courses/film-forecheck.json"
+  ]
+}
