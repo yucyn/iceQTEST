@@ -1,0 +1,10 @@
+{
+  "name": "courtiq-ice-learning",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:content": "node scripts/build-content.mjs",
+    "test": "node scripts/build-content.mjs && node test.mjs && node tests/content.test.mjs && node tests/motion.test.mjs && node tests/gestures.test.mjs && node tests/replay-store.test.mjs && node tests/trial-plan.test.mjs && node tests/tactics-board.test.mjs && node tests/sharing.test.mjs"
+  }
+}

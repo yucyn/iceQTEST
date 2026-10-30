@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {createTrial} from '../dist/trial-model.js';
+import {applyTrialPlan} from '../dist/trial-plan.js';
+import {prepareReplay} from '../dist/replay-store.js';
+import {sampleTrialReplay} from '../dist/trial-replay.js';
+const first=createTrial({t:0,lessonId:'neutral-faceoff-regroup',caseId:'default',owner:'C',own:{C:{x:400,y:300},LW:{x:430,y:150},RW:{x:500,y:450},LD:{x:300,y:200},RD:{x:300,y:400}},opponents:{OC:{x:600,y:300},OL:{x:650,y:150},OR:{x:650,y:450},ODL:{x:750,y:200},ODR:{x:750,y:400}},puck:{x:400,y:300}});
+const frozen=JSON.stringify(first),moves={C:{x:420,y:280},OC:{x:580,y:320},LW:{x:450,y:130},OL:{x:630,y:130}};
+const after=applyTrialPlan(first,{moves},'OC');
+for(const [id,p] of Object.entries(moves))assert.deepEqual(after.own[id]||after.opponents[id],p);
+assert.deepEqual(after.own.RD,first.own.RD);assert.deepEqual(after.opponents.ODR,first.opponents.ODR);assert.equal(after.turn,1);assert.deepEqual(after.responses,[]);assert.equal(JSON.stringify(first),frozen);
+const opponentPass=applyTrialPlan(after,{owner:'OC',passTo:'OL'},'OL');assert.equal(opponentPass.owner,'OL');assert.deepEqual(opponentPass.puck,after.opponents.OL);
+const ownPass=applyTrialPlan(opponentPass,{owner:'C',passTo:'LW'},'LW');assert.equal(ownPass.owner,'LW');assert.equal(ownPass.turn,3);
+assert.throws(()=>applyTrialPlan(first,{passTo:'OL'},'OL'));assert.doesNotThrow(()=>applyTrialPlan(first,{moves:{OC:{x:50,y:300}}},'OC'));assert.throws(()=>applyTrialPlan(first,{},'C'));
+const history=[first,after,opponentPass,ownPass];const saved=prepareReplay({title:'雙方編排',role:'OC',history});assert.equal(saved.record.steps,3);assert.deepEqual(sampleTrialReplay(saved.record.history,2).frame.opponents.OC,after.opponents.OC);
+const mid=sampleTrialReplay(history,1).frame;assert.deepEqual(mid.own.C,{x:410,y:290});assert.deepEqual(mid.opponents.OC,{x:590,y:310});
+console.log('PASS: simultaneous both-team moves, explicit possession switching, passes on either team, one-step count, no automatic response, immutable history and saved 3D replay.');

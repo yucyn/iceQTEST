@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import {createTrial,trialTurn} from '../dist/trial-model.js';
+import {replayDuration,sampleTrialReplay} from '../dist/trial-replay.js';
+import {dragCamera} from '../dist/rink-3d.js';
+const base=createTrial({t:3,own:{C:{x:400,y:300},LW:{x:500,y:150},RW:{x:500,y:450},LD:{x:300,y:200},RD:{x:300,y:400}},opponents:{OC:{x:600,y:300}},puck:{x:400,y:300},owner:'C'});
+const move=trialTurn(base,{type:'move',role:'C',to:{x:430,y:300}},{policy:'hold'});
+const pass=trialTurn(move,{type:'pass',role:'LW'},{policy:'hold'});
+const history=[base,move,pass],unchanged=JSON.stringify(history);
+assert.equal(replayDuration(history),4);assert.equal(replayDuration([base]),0);assert.equal(sampleTrialReplay([],0),null);
+assert.deepEqual(sampleTrialReplay(history,0).frame,base);
+assert.deepEqual(sampleTrialReplay(history,1).frame.own.C,{x:415,y:300});
+assert.deepEqual(sampleTrialReplay(history,1).frame.puck,{x:415,y:300});
+assert.deepEqual(sampleTrialReplay(history,2).frame,move);
+assert.deepEqual(sampleTrialReplay(history,3).frame.puck,{x:465,y:225});
+assert.deepEqual(sampleTrialReplay(history,4).frame,pass);
+assert.deepEqual(sampleTrialReplay(history,999).frame,pass);assert.deepEqual(sampleTrialReplay(history,-1).frame,base);
+assert.deepEqual(sampleTrialReplay([base],0).frame,base);
+assert.deepEqual(sampleTrialReplay(history.slice(0,-1),99).frame,move,'undo removes last replay step');
+assert.equal(JSON.stringify(history),unchanged,'scrubbing never mutates trial state');
+const snapshot=sampleTrialReplay(history,4);snapshot.frame.own.C.x=999;assert.equal(move.own.C.x,430);
+const camera={mode:'orbit',yaw:.95,elev:.64,offset:0,pitch:0};
+assert.ok(dragCamera(camera,50,0).yaw>camera.yaw);assert.ok(dragCamera(camera,-50,0).yaw<camera.yaw);
+assert.equal(dragCamera(camera,0,-30).elev,.49,'vertical orbit gesture unchanged');
+for(const mode of ['follow','eye']){const state={...camera,mode};assert.equal(dragCamera(state,50,0).offset,-.3);assert.equal(dragCamera(state,0,-30).pitch,.18);}
+assert.equal(camera.yaw,.95,'gesture helper leaves input untouched');
+console.log('PASS: move/pass replay, pause/scrub snapshots, empty/undo/reset timelines, immutable trial history and consistent horizontal drag with unchanged vertical controls.');
