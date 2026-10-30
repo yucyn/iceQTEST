@@ -1,0 +1,4 @@
+CourtIQ Ice fix6
+2026-10-30
+Commit: 2b70d441d697243ead4c5cba664dbdbbba8acea2
+Redraw starts at actual skater position; stronger curve smoothing; no puck pointer offset.
