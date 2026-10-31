@@ -11,11 +11,11 @@ for(const course of COURSES)for(const scenario of course.cases){
  assert.equal(getPhase(LESSON.duration),LESSON.phases.at(-1));
  if(course.number==='02'){for(let t=0;t<=LESSON.duration&&puck(t).x<650;t+=.02){assert.ok(position('LW',t).x<=650);assert.ok(position('RW',t).x<=650);assert.ok(position('C',t).x<=650);}assert.equal(LESSON.checkpoint,4.8);assert.equal(LESSON.predictionTime,7.2);}
 }
-assert.equal(keys.size,17);activateLesson(COURSES[0].id);assert.equal(storageKey(),'courtiq-ice-learning:neutral-faceoff:v1');
+assert.equal(keys.size,20);activateLesson(COURSES[0].id);assert.equal(storageKey(),'courtiq-ice-learning:neutral-faceoff:v1');
 activateLesson('post-up-regroup','open');const openPuck=puck(7.2);activateLesson('post-up-regroup','pressure');assert.notDeepEqual(puck(7.2),openPuck);assert.deepEqual(puck(7.2),position('C',7.2));
 console.log('PASS: seven lessons / fourteen scenarios; independent storage, dynamic phases, possession handoffs, forward entry timing.');
 
-assert.equal(COURSES.length,8);assert.equal(COURSES.flatMap(c=>c.cases).length,17);
+assert.equal(COURSES.length,9);assert.equal(COURSES.flatMap(c=>c.cases).length,20);
 for(const course of COURSES){assert.ok(course.category&&course.focus);for(const scenario of course.cases){
  activateLesson(course.id,scenario.id);assert.ok(LESSON.checkpoint<LESSON.predictionTime&&LESSON.predictionTime<=LESSON.duration);
  for(const points of Object.values(LESSON.opponents)){assert.equal(points[0][0],0);assert.equal(points.at(-1)[0],LESSON.duration);assert.ok(points.every((p,i)=>p.every(Number.isFinite)&&(i===0||p[0]>points[i-1][0])));}
