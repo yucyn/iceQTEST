@@ -5,6 +5,7 @@ export function mountMobileTactics({getState,selectRole,selectTool,onActivate,pi
  const $=id=>document.getElementById(id);
  const root=document.createElement('section');root.className='mobile-tactics';root.hidden=true;root.setAttribute('aria-label','戰術板工作區');
  root.innerHTML=`<header class="mt-header"><button data-mt-back aria-label="返回課程，保留目前戰術板">‹ 返回</button><button data-mt-steps aria-label="查看演練步驟">第 0 步 ▾</button><button data-mt-people>人員／球</button><button data-mt-more aria-label="更多戰術板功能與儲存">⋯</button></header>
+ <div class="mt-reserves" aria-label="待放入球員與冰球"><div class="mt-reserve-players"></div><button data-mt-reserve-puck aria-label="新增一顆冰球">＋<span>冰球</span></button></div>
  <div class="mt-viewbar"><span data-mt-possession></span><div role="group" aria-label="冰場顯示範圍"><button data-mt-zoom-reset aria-label="還原球場縮放">100%</button><button data-mt-view="all" aria-pressed="true">全場</button><button data-mt-view="left" aria-pressed="false">左半</button><button data-mt-view="right" aria-pressed="false">右半</button></div></div>
  <div class="mt-stage"></div><p class="mt-hint" role="status"></p><button class="mt-resume" hidden>繼續編排最後一步</button>
  <nav class="mt-tools" aria-label="戰術工具"><button data-mt-tool="select">↖<span>選取</span></button><button data-mt-tool="solid">→<span>位移</span></button><button data-mt-tool="carry">〰<span>帶球</span></button><button data-mt-tool="pass">⇢<span>傳球</span></button><button data-mt-tool="shot">⇒<span>射門</span></button><button data-mt-add>＋<span>冰球</span></button><button data-mt-pickup>●<span>拿球權</span></button></nav>
@@ -29,11 +30,18 @@ export function mountMobileTactics({getState,selectRole,selectTool,onActivate,pi
   for(const id of ids){const b=document.createElement('button');b.dataset.mtBench=id;b.textContent=id;b.onclick=()=>selectRole(id);bench.append(b);}
   const empty=document.createElement('small');empty.textContent='全部已入場';bench.append(empty);benches.push(bench);stage.append(bench);
  }
+ const reserveRows=[];
+ for(const [label,ids] of [['己方',['C','LW','RW','LD','RD']],['對手',['OC','OL','OR','ODL','ODR']]]){
+  const row=document.createElement('div');row.className='mt-reserve-row';const title=document.createElement('span');title.textContent=label;row.append(title);
+  for(const id of ids){const b=document.createElement('button');b.dataset.mtReserve=id;b.textContent=id;b.setAttribute('aria-label','放入'+label+' '+id);b.onclick=()=>selectRole(id);row.append(b);}
+  const empty=document.createElement('small');empty.textContent='全部已入場';empty.hidden=true;row.append(empty);reserveRows.push(row);find('.mt-reserve-players').append(row);
+ }
+ find('[data-mt-reserve-puck]').onclick=()=>{$('boardAddPuck').click();selectTool('puck');};
  const camera=bindBoardViewport(rink,{enabled:()=>active&&layer.hidden,onChange:(zoom,box)=>{find('[data-mt-zoom-reset]').textContent=Math.round(zoom*100)+'%';for(const [key,value] of Object.entries({x:box.x,y:box.y,width:box.w,height:box.h}))clipRect.setAttribute(key,value);}});
  let active=false,view='all',lastFocus=null;
  function relocate(node,target){const marker=document.createComment('mobile tactics return');node.before(marker);anchors.push([node,marker]);target.append(node);}
- function closeSheet(){if(layer.hidden)return;layer.hidden=true;stage.inert=false;find('.mt-tools').inert=false;find('.mt-actions').inert=false;if(lastFocus?.isConnected)lastFocus.focus({preventScroll:true});}
- function openSheet(name,trigger){lastFocus=trigger||document.activeElement;for(const panel of root.querySelectorAll('[data-mt-panel]'))panel.hidden=panel.dataset.mtPanel!==name;find('.mt-sheet-title').textContent={people:'人員與冰球',steps:'演練步驟',more:'更多功能'}[name];layer.hidden=false;stage.inert=true;find('.mt-tools').inert=true;find('.mt-actions').inert=true;find('[data-mt-close]').focus({preventScroll:true});}
+ function closeSheet(){if(layer.hidden)return;layer.hidden=true;stage.inert=false;find('.mt-reserves').inert=false;find('.mt-tools').inert=false;find('.mt-actions').inert=false;if(lastFocus?.isConnected)lastFocus.focus({preventScroll:true});}
+ function openSheet(name,trigger){lastFocus=trigger||document.activeElement;for(const panel of root.querySelectorAll('[data-mt-panel]'))panel.hidden=panel.dataset.mtPanel!==name;find('.mt-sheet-title').textContent={people:'人員與冰球',steps:'演練步驟',more:'更多功能'}[name];layer.hidden=false;stage.inert=true;find('.mt-reserves').inert=true;find('.mt-tools').inert=true;find('.mt-actions').inert=true;find('[data-mt-close]').focus({preventScroll:true});}
  function setView(value){view=value;root.style.setProperty('--mt-rink-aspect',value==='all'?'5 / 3':'5 / 6');const x=value==='right'?500:0,w=value==='all'?1000:500;
   camera.reset({x,y:0,w,h:600});rink.setAttribute('preserveAspectRatio','xMidYMid meet');
   clipRect.setAttribute('x',x);clipRect.setAttribute('y',0);clipRect.setAttribute('width',w);clipRect.setAttribute('height',600);viewport.setAttribute('clip-path','url(#tacticsViewClip)');
@@ -64,6 +72,8 @@ export function mountMobileTactics({getState,selectRole,selectTool,onActivate,pi
 
   for(const bench of benches){let waiting=0;for(const b of bench.querySelectorAll('[data-mt-bench]')){b.hidden=s.activePlayers.includes(b.dataset.mtBench);if(!b.hidden)waiting++;b.disabled=s.animating||s.inspecting;b.setAttribute('aria-pressed',String(b.dataset.mtBench===s.role));}bench.querySelector('small').hidden=waiting>0;}
 
+  for(const row of reserveRows){let waiting=0;for(const b of row.querySelectorAll('[data-mt-reserve]')){b.hidden=s.activePlayers.includes(b.dataset.mtReserve);if(!b.hidden)waiting++;b.disabled=s.animating||s.inspecting;b.setAttribute('aria-pressed',String(b.dataset.mtReserve===s.role));}row.querySelector('small').hidden=waiting>0;}
+  find('[data-mt-reserve-puck]').disabled=$('boardAddPuck').disabled||s.inspecting;
   find('[data-mt-steps]').textContent=(s.inspecting?'查看 ':'第 ')+s.turn+' / 30 步 ▾';find('[data-mt-people]').textContent=s.role+' · 人員／球';
   find('[data-mt-possession]').textContent=s.owner?s.owner+' 持球':s.puckCount?'無人持球':'尚未放入冰球';
   for(const b of root.querySelectorAll('[data-mt-tool]')){const tool=b.dataset.mtTool;b.disabled=s.animating||['pass','shot'].includes(tool)&&s.owner!==s.role;b.setAttribute('aria-pressed',String(tool==='select'?['setup','move','puck'].includes(s.tool):tool===s.tool));}
@@ -72,7 +82,7 @@ export function mountMobileTactics({getState,selectRole,selectTool,onActivate,pi
   find('[data-mt-place]').disabled=!s.puckCount||s.animating;find('[data-mt-give]').disabled=!s.puckCount||s.animating||!s.activePlayers.includes(s.role);
   find('[data-mt-undo]').textContent=s.hasPlan?'↶ 撤銷動作':'↶ 撤銷一步';find('[data-mt-play]').textContent=s.playing?'Ⅱ 暫停':'▶ 播放';
   find('.mt-resume').hidden=!s.inspecting;
-  const text=s.error||(s.inspecting?'正在查看已加入的局面。':s.animating?'正在演示已加入的步驟。':!s.activePlayers.length?'點「人員／球」選球員，再點冰場放入。':!s.activePlayers.includes(s.role)?'點冰場放入 '+s.role+'。':s.tool==='pass'?'畫直線，交給終點最近的同隊球員。':s.tool==='shot'?'畫直線射門，再加入這一步。':s.tool==='puck'?'點落點放球；無人持有的冰球也可直接拖動。':s.tool==='setup'?'直接拖動調整擺位；工具列可切換走位。':'從球員位置畫路線，再加入這一步。');
+  const text=s.error||(s.inspecting?'正在查看已加入的局面。':s.animating?'正在演示已加入的步驟。':!s.activePlayers.length?'選待放球員，再點冰場放入；＋可新增冰球。':!s.activePlayers.includes(s.role)?'點冰場放入 '+s.role+'。':s.tool==='pass'?'畫直線，交給終點最近的同隊球員。':s.tool==='shot'?'畫直線射門，再加入這一步。':s.tool==='puck'?'點落點放球；無人持有的冰球也可直接拖動。':s.tool==='setup'?'直接拖動調整擺位；工具列可切換走位。':'從球員位置畫路線，再加入這一步。');
   find('.mt-hint').textContent=text;find('.mt-hint').classList.toggle('is-error',!!s.error);
  }
  sync();return {sync,closeSheet};

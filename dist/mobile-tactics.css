@@ -64,3 +64,28 @@
  .mt-actions button{padding:7px 2px;min-height:44px;font-size:11px}
  .mt-resume{margin:3px 4px;font-size:12px;min-height:36px}
 }
+/* Visible reserve rack on phones/tablets; desktop retains the side benches. */
+.mt-reserves{display:none}
+.mobile-tactics .mt-reserves button[hidden],.mt-reserves small[hidden]{display:none!important}
+@media(max-width:999px) and (min-height:551px){
+ .mt-reserves{display:grid;grid-template-columns:minmax(0,1fr) 46px;gap:7px;flex-shrink:0;padding:8px 4px;background:#edf3ee;border:1px solid #dce4db;border-radius:12px}
+ .mt-reserve-players{display:grid;gap:6px;min-width:0}
+ .mt-reserve-row{display:grid;grid-template-columns:25px repeat(5,minmax(0,1fr));gap:4px;align-items:center;min-height:44px}
+ .mt-reserve-row>span{font-size:10px;color:#56766c}.mt-reserve-row small{grid-column:2/-1;font-size:12px;color:#56766c}
+ .mobile-tactics .mt-reserve-row button{min-width:0;min-height:44px;padding:4px 0;font-size:11px;border-radius:22px}
+ .mt-reserve-row:nth-child(2) button{background:#f4e8e2;border-color:#c89c96}.mt-reserve-row:nth-child(2) button[aria-pressed=true]{background:#e9bbb0}
+ .mobile-tactics [data-mt-reserve-puck]{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:5px 0;font-size:25px;min-width:0;background:#fffef9}
+ [data-mt-reserve-puck] span{font-size:11px}
+}
+@media(max-width:760px) and (min-height:551px){
+ .mt-reserves{margin-top:auto;margin-bottom:10px}
+ .mt-viewbar{margin-top:0;margin-bottom:10px}
+ .mt-hint{padding:8px 6px;min-height:33px;max-height:46px}
+ .mt-tools{padding:9px 2px;gap:5px;margin-top:4px}
+ .mt-actions{padding-top:9px;padding-bottom:12px;gap:6px;margin-top:4px}
+}
+@media(min-width:761px) and (max-width:999px) and (min-height:551px){
+ .mobile-tactics{grid-template-rows:58px 104px 44px 56px minmax(0,1fr) 34px 60px}
+ .mt-reserves{grid-row:2;grid-column:1;max-width:580px;width:100%;justify-self:center;padding:3px 8px}
+ .mt-viewbar{grid-row:3}.mt-tools{grid-row:4}.mt-stage{grid-row:5}.mt-hint{grid-row:6}.mt-actions{grid-row:7}
+}
