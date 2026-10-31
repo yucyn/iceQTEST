@@ -34,7 +34,7 @@ export function mountMobileTactics({getState,selectRole,selectTool,onActivate,pi
  function relocate(node,target){const marker=document.createComment('mobile tactics return');node.before(marker);anchors.push([node,marker]);target.append(node);}
  function closeSheet(){if(layer.hidden)return;layer.hidden=true;stage.inert=false;find('.mt-tools').inert=false;find('.mt-actions').inert=false;if(lastFocus?.isConnected)lastFocus.focus({preventScroll:true});}
  function openSheet(name,trigger){lastFocus=trigger||document.activeElement;for(const panel of root.querySelectorAll('[data-mt-panel]'))panel.hidden=panel.dataset.mtPanel!==name;find('.mt-sheet-title').textContent={people:'人員與冰球',steps:'演練步驟',more:'更多功能'}[name];layer.hidden=false;stage.inert=true;find('.mt-tools').inert=true;find('.mt-actions').inert=true;find('[data-mt-close]').focus({preventScroll:true});}
- function setView(value){view=value;const x=value==='right'?500:0,w=value==='all'?1000:500;
+ function setView(value){view=value;root.style.setProperty('--mt-rink-aspect',value==='all'?'5 / 3':'5 / 6');const x=value==='right'?500:0,w=value==='all'?1000:500;
   camera.reset({x,y:0,w,h:600});rink.setAttribute('preserveAspectRatio','xMidYMid meet');
   clipRect.setAttribute('x',x);clipRect.setAttribute('y',0);clipRect.setAttribute('width',w);clipRect.setAttribute('height',600);viewport.setAttribute('clip-path','url(#tacticsViewClip)');
   for(const b of root.querySelectorAll('[data-mt-view]'))b.setAttribute('aria-pressed',String(b.dataset.mtView===value));}

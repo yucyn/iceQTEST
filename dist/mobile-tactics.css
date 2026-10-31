@@ -42,3 +42,25 @@
 .mt-tools{grid-template-columns:repeat(7,minmax(0,1fr))}.mt-actions{grid-template-columns:1fr 1.5fr 1fr 1fr}.mt-actions [data-mt-empty]{color:#98554c}
 @media(min-width:761px) and (min-height:551px){.mt-tools button{min-width:0;width:100px}.mt-actions button{min-width:120px}}
 @media(max-height:550px) and (min-width:600px){.mt-tools{overflow-y:auto}.mt-tools button{min-height:38px;flex-shrink:0}}
+/* Keep the portrait editing controls next to the rink, with room for the
+   phone home indicator. Grid items must shrink instead of clipping right. */
+.mobile-tactics{box-sizing:border-box;padding-bottom:max(12px,env(safe-area-inset-bottom,0px))}
+.mobile-tactics .mt-tools,.mobile-tactics .mt-actions{min-width:0;max-width:100%}
+.mobile-tactics .mt-tools button,.mobile-tactics .mt-actions button{min-width:0;max-width:100%}
+.mt-actions{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr)}
+@media(max-width:760px) and (min-height:551px){
+ .mobile-tactics{padding-left:max(6px,env(safe-area-inset-left,0px));padding-right:max(6px,env(safe-area-inset-right,0px))}
+ .mt-header{padding:4px 2px;gap:3px}
+ .mt-viewbar{margin-top:auto;padding:4px 2px;min-height:40px;gap:4px}
+ .mt-viewbar>span{min-width:0}.mt-viewbar>div{flex-shrink:0}
+ .mt-viewbar button{padding:4px 8px;min-height:32px}
+ .mt-stage{position:relative;display:block;flex:0 1 auto;aspect-ratio:var(--mt-rink-aspect,5 / 3);width:100%;padding:0;min-height:0}
+ .mobile-tactics #trialRink{position:absolute;inset:0;width:100%;height:100%}
+ .mt-hint{padding:4px 6px;min-height:25px;max-height:38px;font-size:11px}
+ .mt-tools{padding:5px 2px;gap:4px}
+ .mt-tools button{min-height:52px;padding:4px 0;font-size:21px}
+ .mt-tools span{font-size:10px;white-space:nowrap}
+ .mt-actions{margin-bottom:auto;padding:5px 2px 8px;gap:5px;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) minmax(0,.8fr) minmax(0,1fr)}
+ .mt-actions button{padding:7px 2px;min-height:44px;font-size:11px}
+ .mt-resume{margin:3px 4px;font-size:12px;min-height:36px}
+}
