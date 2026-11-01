@@ -4,9 +4,9 @@ import {isOnIce} from './trial-model.js';
 import {bindRinkGestures,pinchCamera} from './rink-gestures.js';
 // Small self-contained WebGL scene: no external libraries or remote assets.
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-// Same horizontal gesture in both renderers; preserve established vertical drag.
+// Shared drag direction for WebGL and Canvas player cameras.
 export function dragCamera(state,dx,dy){
- return state.mode==='orbit'?{...state,yaw:state.yaw+dx*.006,elev:clamp(state.elev+dy*.005,.12,1.25)}:{...state,offset:state.offset+dx*.006,pitch:clamp(state.pitch-dy*.006,-.65,.65)};
+ return state.mode==='orbit'?{...state,yaw:state.yaw+dx*.006,elev:clamp(state.elev+dy*.005,.12,1.25)}:{...state,offset:state.offset+dx*.006,pitch:clamp(state.pitch+dy*.006,-.65,.65)};
 }
 const sub=(a,b)=>a.map((v,i)=>v-b[i]),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>{const d=Math.hypot(...a)||1;return a.map(v=>v/d);};
 export function multiply(a,b){const c=new Float32Array(16);for(let col=0;col<4;col++)for(let row=0;row<4;row++)for(let k=0;k<4;k++)c[col*4+row]+=a[k*4+row]*b[col*4+k];return c;}
