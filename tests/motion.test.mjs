@@ -21,6 +21,16 @@ const snapshot=sampleTrialReplay(history,4);snapshot.frame.own.C.x=999;assert.eq
 const camera={mode:'orbit',yaw:.95,elev:.64,offset:0,pitch:0};
 assert.ok(dragCamera(camera,50,0).yaw>camera.yaw);assert.ok(dragCamera(camera,-50,0).yaw<camera.yaw);
 assert.equal(dragCamera(camera,0,-30).elev,.49,'vertical orbit gesture unchanged');
-for(const mode of ['follow','eye']){const state={...camera,mode};assert.equal(dragCamera(state,50,0).offset,-.3);assert.equal(dragCamera(state,0,-30).pitch,.18);}
+// Confirmed player-camera controls: horizontal and vertical deltas retain their sign.
+for(const mode of ['follow','eye']){
+ const state={...camera,mode},before=structuredClone(state);
+ assert.equal(dragCamera(state,50,0).offset,.3,`${mode}: right drag increases offset`);
+ assert.equal(dragCamera(state,-50,0).offset,-.3,`${mode}: left drag decreases offset`);
+ assert.equal(dragCamera(state,0,-30).pitch,-.18,`${mode}: upward drag decreases pitch`);
+ assert.equal(dragCamera(state,0,30).pitch,.18,`${mode}: downward drag increases pitch`);
+ assert.equal(dragCamera(state,0,1000).pitch,.65,`${mode}: upper pitch bound`);
+ assert.equal(dragCamera(state,0,-1000).pitch,-.65,`${mode}: lower pitch bound`);
+ assert.deepEqual(state,before,`${mode}: dragging leaves input untouched`);
+}
 assert.equal(camera.yaw,.95,'gesture helper leaves input untouched');
-console.log('PASS: move/pass replay, pause/scrub snapshots, empty/undo/reset timelines, immutable trial history and consistent horizontal drag with unchanged vertical controls.');
+console.log('PASS: move/pass replay, pause/scrub snapshots, empty/undo/reset timelines, immutable trial history, confirmed player-camera controls and pitch limits, unchanged orbit controls.');
