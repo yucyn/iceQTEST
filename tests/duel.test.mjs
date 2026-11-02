@@ -8,3 +8,7 @@ test('individual AI controls nine and only user C',()=>{const s=createDuel(frame
 test('team player controls five, AI controls five',()=>{const s=createDuel(frame,{mode:'team'});const ai=planBaselineAI(s);assert.equal(ai.length,5);assert(ai.every(a=>a.role.startsWith('O')));});
 test('reject unauthorized, teleport, invalid pass',()=>{const s=createDuel(frame);assert.throws(()=>stepDuel(s,[{type:'move',role:'LW',to:{x:401,y:150}}]));assert.throws(()=>stepDuel(s,[{type:'move',role:'C',to:{x:800,y:300}}]));assert.throws(()=>stepDuel(s,[{type:'pass',role:'C',to:'LW'}]));});
 test('history undo redo and mode switch',()=>{const s=createDuel(frame);const h=createDuelHistory(s);h.commit(stepDuel(s,[{type:'hold',role:'C'}]));assert.equal(h.undo().tick,0);assert.equal(h.redo().tick,1);assert.equal(switchDuelMode(s,'team').controlledPlayers.length,5);});
+
+test('AI maintains defensive shape rather than sending every skater at puck',()=>{const s=createDuel(frame,{mode:'team'});const ai=planBaselineAI(s);assert.equal(ai.length,5);const positions=ai.filter(x=>x.type==='move').map(x=>x.to);assert(positions.length>1);assert(new Set(positions.map(x=>Math.round(x.y/20))).size>1);});
+test('challenge requires proximity, does not grant automatic steal',()=>{const s=createDuel(frame);assert.throws(()=>stepDuel(s,[{type:'challenge',role:'C'}]));});
+test('loose puck can be retrieved',()=>{const s=createDuel({...frame,owner:null,puck:{x:250,y:300}});const n=stepDuel(s,[],[]);assert.equal(n.owner,'C');});
