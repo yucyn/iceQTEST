@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {analyzeStep} from '../dist/analysis/step-advisor.js';
+const before={own:{C:{x:220,y:280},LW:{x:380,y:180},RW:{x:380,y:420},LD:{x:140,y:430},RD:{x:160,y:200}},opponents:{OC:{x:100,y:430},OL:{x:220,y:310},OR:{x:420,y:440},ODL:{x:475,y:180},ODR:{x:475,y:410}},owner:'OC',puck:{x:100,y:430}};
+test('analyzes spatial coverage without mutating frame',()=>{const after=structuredClone(before);after.own.C={x:115,y:420};const orig=structuredClone(after);const r=analyzeStep(before,after);assert.equal(r.method,'heuristic-v1');assert.equal(r.coverage.length,4);assert(r.moved.some(m=>m.id==='C'));assert.deepEqual(after,orig);});
+test('validates defending side',()=>assert.throws(()=>analyzeStep(before,before,{defending:'invalid'})));
