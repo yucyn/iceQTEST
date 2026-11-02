@@ -3,9 +3,9 @@ import {OWN,distance,icePoint} from '../trial-model.js';
 const LIMIT=32;
 function toward(a,b,step){const d=distance(a,b);return d<1?{...a}:icePoint({x:a.x+(b.x-a.x)*Math.min(1,step/d),y:a.y+(b.y-a.y)*Math.min(1,step/d)});}
 function onIce(s,id){return !Array.isArray(s.activePlayers)||s.activePlayers.includes(id);}
-export function cooperate(before,after,controlled,{maxStep=LIMIT}={}){
+export function cooperate(before,after,controlled,{maxStep=LIMIT,reserved=[]}={}){
  if(!OWN.includes(controlled)||!after?.own||!after?.opponents)return after;
- const next=structuredClone(after),other=OWN.filter(id=>id!==controlled&&onIce(after,id));
+ const next=structuredClone(after),other=OWN.filter(id=>id!==controlled&&!reserved.includes(id)&&onIce(after,id));
  const events=[],responses=[];
  const defending=after.owner&&!OWN.includes(after.owner);
  const goal={x:130,y:300};
