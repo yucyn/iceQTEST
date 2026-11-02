@@ -40,6 +40,24 @@ export function cooperate(before,after,controlled,{maxStep=LIMIT}={}){
    // Attack: the puck carrier must keep possession; unselected teammates look for support.
    // A close receiver may move into an open lane, not automatically advance toward the goal.
    const carrierId=after.owner,carrier=after.own[carrierId];
+   // Follow the play with defensive depth: the available backline shifts as a unit
+   // only when a gap grows, without passing the puck or converging on one spot.
+   // The attacking direction in the lesson trial is rightward (own goal left).
+   const activeBacks=['LD','RD'].filter(id=>other.includes(id)&&id!==carrierId);
+   for(const id of activeBacks){
+     const p=after.own[id];
+     const laneY=id==='LD'?220:380;
+     const coverX=Math.max(195,Math.min(600,carrier.x-125));
+     const target=icePoint({x:coverX,y:laneY});
+     // Preserve defensive depth, and do not shuffle for tiny changes.
+     if(distance(p,target)<22)continue;
+     const to=toward(before.own[id],target,Math.min(maxStep,25));
+     if(distance(before.own[id],to)>3){
+       next.own[id]=to;
+       responses.push({id,from:{...before.own[id]},to:{...to},body:id+' 隨進攻推進保持後方防守層次，防止失球後遭反擊。'});
+       events.push(id+' 跟進並維持後方保護。');
+     }
+   }
    const candidates=other.filter(id=>id!==carrierId);
    const planned=candidates.map(id=>{
      const p=after.own[id],d=distance(p,carrier);
