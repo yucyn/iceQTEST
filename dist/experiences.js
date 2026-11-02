@@ -16,33 +16,36 @@ import {createRink3D} from './rink-3d.js';
 export function mountExperiences({getFrame,getMeta,selectSource}){
  const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';let mobileBoard=null;let draftUndo=[],inkStart=null,inkBefore=null,inkStroke=null,suppressClick=false,boardPlaying=false,boardRAF=null,boardClock=0,draftPuck=null,draftPaths={},inkRole=null,draftPassPath=null,passStroke=null,draftPuckActions={},setupPreview=null,drillDrag=null,boardInspect=false;let mode='trial',isBoard=false,boardSession=null,courseSession=null,lastLibraryKey='',history=[],pending=null,draftMoves={},draftOwner=undefined,draftPass=null,animation=null,trialAnim=null,scene=null,sceneAttempted=false,sceneTime=0,sceneTrialTime=0,scenePlaying=false,sceneRAF=null,sceneLast=null,sourceKey='',sourceTime=null,sourceRole=null;
  const el=(tag,attrs={},text)=>{const n=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,String(v));if(text!==undefined)n.textContent=text;return n;};
- let coachLastTurn=-1,coachResult=null;
- const advisorPanel=document.createElement('section');advisorPanel.id='stepAdvisorPanel';advisorPanel.className='panel';advisorPanel.style.cssText='margin:12px 0;padding:12px;border:1px solid #bbd5e0;border-radius:12px;background:var(--surface,#fff)';
- advisorPanel.innerHTML='<strong>戰術教練｜即時提醒</strong><p style="font-size:12px">每完成一步自動比較，只有發現新風險才提醒；冰場紅色標記為需要注意的位置。</p><div id="stepAdvisorResult" aria-live="polite" style="margin-top:10px;font-size:14px"></div>';
- const notesAnchor=$('trialNotes');notesAnchor?.parentElement?.append(advisorPanel);
- const assistLabel=document.createElement('label');assistLabel.style.cssText='display:flex;align-items:center;gap:8px;margin:12px 0;font-weight:600';assistLabel.innerHTML='<input type="checkbox" id="teammateAssistToggle"> AI 隊友協作（其他己方球員自動補位）';advisorPanel.insertBefore(assistLabel,$('stepAdvisorResult'));
-
+ let coachLastTurn=-1,coachResult=null,coachHistory=[],coachOpen=false;
+ const advisorPanel=document.createElement('section');advisorPanel.id='stepAdvisorPanel';advisorPanel.className='panel';advisorPanel.style.cssText='margin:12px 0;padding:10px 12px;border:1px solid #bbd5e0;border-radius:12px;background:var(--surface,#fff)';
+ advisorPanel.innerHTML='<button type="button" id="stepAdvisorToggle" aria-expanded="false" aria-controls="stepAdvisorBody" style="width:100%;display:flex;justify-content:space-between;border:0;background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer;text-align:left;padding:2px 0"><span id="stepAdvisorHeading">戰術教練 ✓</span><span id="stepAdvisorChevron">⌄</span></button><div id="stepAdvisorBody" hidden><div id="stepAdvisorResult" aria-live="polite" style="margin-top:10px;font-size:14px"></div><div id="stepAdvisorHistory" style="margin-top:8px;font-size:12px"></div></div>';
+ $('trialNotes')?.parentElement?.append(advisorPanel);
+ const assistLabel=document.createElement('label');assistLabel.style.cssText='display:flex;align-items:center;gap:8px;margin:12px 0;font-weight:600';assistLabel.innerHTML='<input type="checkbox" id="teammateAssistToggle"> AI 隊友協作｜自動跑位與補位';$('stepAdvisorBody').append(assistLabel);
+ const coachToggle=$('stepAdvisorToggle'),coachBody=$('stepAdvisorBody'),coachHeading=$('stepAdvisorHeading');
+ function setCoachOpen(open){coachOpen=open;coachBody.hidden=!open;coachToggle.setAttribute('aria-expanded',String(open));$('stepAdvisorChevron').textContent=open?'⌃':'⌄';}
+ coachToggle.addEventListener('click',()=>setCoachOpen(!coachOpen));
  function refreshCoach(){
   const s=trial();if(!s||isBoard){advisorPanel.hidden=true;coachResult=null;return;}advisorPanel.hidden=false;
   if(s.turn===coachLastTurn)return;coachLastTurn=s.turn;
   const wrap=$('stepAdvisorResult');wrap.replaceChildren();coachResult=null;
-  if(!s.turn){wrap.textContent='完成下一步後，教練會在出現防守空檔時提醒。';return;}
+  if(!s.turn){coachHistory=[];coachHeading.textContent='戰術教練 ✓';setCoachOpen(false);$('stepAdvisorHistory').replaceChildren();return;}
   try{
-    const before=history.length>1?history[history.length-2]:null;
-    const previous=before?analyzeStep(null,before):null;
-    const result=analyzeStep(before,s);coachResult=result;
-    const oldZones=new Set((previous?.coverage||[]).filter(x=>x.exposed).map(x=>x.id));
-    const fresh=result.coverage.filter(x=>x.exposed&&!oldZones.has(x.id));
-    const title=document.createElement('strong'),p=document.createElement('p');
-    if(fresh.length){
-      title.textContent='注意：'+fresh.map(x=>x.name).join('、')+'出現新空檔';
-      p.textContent='你的移動讓這些區域的防守距離相對拉大。先確認是否有隊友可以接手，再考慮下一步。';
-    }else if(result.openLanes.length&&!previous?.openLanes?.length){
-      title.textContent='注意：出現新的傳球通道';
-      p.textContent=result.openLanes.map(x=>x.from+' → '+x.to).join('、')+' 目前較少受到直線阻擋。';
-    }else{title.textContent='本步未出現新的明顯防守漏洞';p.textContent='可以繼續試走；既有風險會保留在球場熱區上。';}
-    wrap.append(title,p);
-  }catch(e){wrap.textContent='這一步暫時無法分析：'+e.message;}
+   const before=history.length>1?history[history.length-2]:null;
+   const previous=before?analyzeStep(null,before):null;
+   const result=analyzeStep(before,s);coachResult=result;
+   const oldZones=new Set((previous?.coverage||[]).filter(x=>x.exposed).map(x=>x.id));
+   const fresh=result.coverage.filter(x=>x.exposed&&!oldZones.has(x.id));
+   const oldLanes=new Set((previous?.openLanes||[]).map(x=>[x.from,x.to].sort().join(':')));
+   const newLanes=result.openLanes.filter(x=>!oldLanes.has([x.from,x.to].sort().join(':')));
+   let message='';
+   if(fresh.length)message=fresh.map(x=>x.name+'防守出現空檔').join('；');
+   else if(newLanes.length)message='傳球通道：'+newLanes.map(x=>x.from+' → '+x.to).join('、');
+   coachHistory=coachHistory.filter(x=>x.turn<s.turn);
+   if(message){coachHeading.textContent='戰術教練｜第 '+s.turn+' 步';const p=document.createElement('p');p.textContent=message;wrap.append(p);coachHistory.push({turn:s.turn,message});setCoachOpen(true);}
+   else{coachHeading.textContent='戰術教練 ✓';setCoachOpen(false);}
+   const log=$('stepAdvisorHistory');log.replaceChildren();
+   if(coachHistory.length){const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='歷史提醒（'+coachHistory.length+'）';details.append(summary);for(const item of coachHistory){const p=document.createElement('p');p.textContent='第 '+item.turn+' 步｜'+item.message;details.append(p);}log.append(details);}
+  }catch(e){coachHeading.textContent='戰術教練｜分析暫停';wrap.textContent='暫時無法分析此步';setCoachOpen(true);}
  }
  function drawCoachOverlay(){
   const svg=$('trialRink');if(!svg)return;
@@ -81,7 +84,7 @@ export function mountExperiences({getFrame,getMeta,selectSource}){
  function currentTrialFrame(){if(!trial())return null;if(setupPreview)return setupPreview;if(trialAnim)return blendFrames(trialAnim.from,trialAnim.to,trialAnim.u);return trial();}
  function renderTrial(){if(!trial())return;renderCanvasControls();renderDrillRack();for(const b of document.querySelectorAll('[data-board-tool]')){b.setAttribute('aria-pressed',String(b.dataset.boardTool===$('boardTool').value));b.disabled=!!trialAnim;}for(const b of document.querySelectorAll('[data-ink-color]'))b.setAttribute('aria-pressed',String(b.dataset.inkColor===$('inkColor').value));document.querySelector('.extensions').classList.toggle('board-mode',isBoard);(isBoard?$('trialBenchSlot'):$('trialPickerSlot')).append($('trialPlayerPicker'));$('boardTools').hidden=!isBoard;$('trialRink').classList.toggle('inking',isBoard&&['solid','carry','pass','shot'].includes($('boardTool').value));$('boardPuck').textContent=trial().puckOnIce===false?'● 冰球在場外 · 選取放入':'● 重新放置冰球';$('puckToPlayer').disabled=!isOnIce(trial(),role())||!!trialAnim;$('boardPlay').disabled=history.length<2;$('undoInk').disabled=(!(trial().annotations||[]).length&&!Object.keys(draftPaths).length&&!draftUndo.length)||!!trialAnim;$('clearInk').disabled=$('undoInk').disabled;$('trialPolicy').disabled=isBoard;$('trialCheckpoint').hidden=isBoard;$('trialReference').parentElement.hidden=isBoard;$('trialCapture').textContent=isBoard?'清空戰術板 ↺':'以目前課程畫面重新開始 ↺';$('sceneSource').disabled=isBoard;if(isBoard)$('sceneSource').value='trial';$('trialModeHint').hidden=isBoard;const s=currentTrialFrame(),r=role(),g=$('trialDrawing');g.replaceChildren();g.append(el('text',{x:740,y:32,fill:'#467b72','font-size':13},s.direction==='defend'?'← 對手向左進攻':'己方向右進攻 →'));$('saveTrial').disabled=(history.length<=1&&!(isBoard&&(trial().annotations?.length||trial().activePlayers?.length||visiblePucks(trial()).length)))||!!trialAnim||manual()&&!!hasPlan();$('trialReplay').disabled=history.length<=1||!!trialAnim||manual()&&!!hasPlan();$('trialTurnLabel').textContent=`第 ${s.turn} / ${MAX_TURNS} 步`;$('trialOwnerLabel').textContent=s.puckOnIce===false?'冰球尚未入場':s.owner?(OWN.includes(s.owner)?'己方 ':'對手 ')+s.owner+' 控球':'無人控球／傳球中';$('trialUndo').disabled=(history.length<=1&&!(isBoard&&draftUndo.length))||!!trialAnim;$('trialUndo').textContent=isBoard&&hasPlan()?'撤銷上一動作':'撤銷一步';$('trialCommit').disabled=!!passStroke||((manual()||multiStep())?!hasPlan():!pending)||!!trialAnim||trial().turn>=MAX_TURNS;$('trialPass').disabled=(trial().puckOnIce===false&&draftOwner===undefined)||(!isOnIce(trial(),r)&&!draftMoves[r])||sideFor(trial(),plannedOwner())!==sideFor(trial(),r)||plannedOwner()===r||!!trialAnim||trial().turn>=MAX_TURNS;$('trialOwner').disabled=(!(manual()||multiStep())&&trial().turn>0)||!!trialAnim;
  $('trialCommit').textContent=manual()?isBoard?'加入這一步 →':'演示本步 →':multiStep()?'執行已安排的球員 →':'走這一步 →';$('trialPass').textContent=(manual()||multiStep())?'安排傳給所選隊友':'傳給所選隊友';$('clearTrialPlan').disabled=!hasPlan()&&!pending||!!trialAnim;
- $('trialMethodNote').textContent=manual()?'自由編排由你安排兩隊的走位與球權，不產生自動回應，也不是 AI 預測。先演示本步，再儲存或進入 3D 回放。':'規則試走：依選定的另一隊回應假設，展示一種可能分支。未使用 AI，也未估計事件機率。';if(isBoard)$('trialMethodNote').textContent='起始擺位可直接拖動球員與冰球；新增多顆球、選中一顆，再交給球員。之後直接拖球員畫路線，按「加入這一步」；兩隊與多顆球可同一步演練。也可先載入排隊範例再修改。';$('trialModeHint').textContent=multiStep()?'多球員編排：依序安排每位隊員，按執行後同時移動；未安排的隊友交由 AI。':manual()?'自由編排：選任一隊球員 → 點落點 → 換其他球員繼續安排 → 演示本步。兩隊都不會自動移動。':'單人試走：選一人走一步；另一隊依選定假設回應。';
+ $('trialMethodNote').textContent=manual()?'自由編排｜兩隊依照設定路線移動。':'規則試走：依選定的另一隊回應假設，展示一種可能分支。未使用 AI，也未估計事件機率。';if(isBoard)$('trialMethodNote').textContent='起始擺位可直接拖動球員與冰球；新增多顆球、選中一顆，再交給球員。之後直接拖球員畫路線，按「加入這一步」；兩隊與多顆球可同一步演練。也可先載入排隊範例再修改。';$('trialModeHint').textContent=multiStep()?'多球員編排：依序安排每位隊員，按執行後同時移動；未安排的隊友交由 AI。':manual()?'自由編排｜球員依照設定路線移動。':'單人試走：選一人走一步；另一隊依選定假設回應。';
  $('trialPlanSummary').textContent=(manual()||multiStep())?`待演示：${Object.keys(draftMoves).length} 人（${Object.keys(draftMoves).join('、')||'尚未安排'}）${draftOwner!==undefined?'；指定球權：'+(draftOwner||'無人'):''}${draftPass?'；傳球給 '+draftPass:draftPassPath?.type==='shot'?'；射門至指定地點':''}`:'';
  $('trialPlayerPicker').replaceChildren(...['own','opponents'].map(side=>{const row=document.createElement('div'),label=document.createElement('span');label.textContent=side==='own'?'己方':'對手';row.append(label);for(const id of (side==='own'?OWN:OPP)){const b=document.createElement('button');b.className='player-pick';b.dataset.benchRole=id;b.textContent=id+(isBoard&&!isOnIce(s,id)?draftMoves[id]?' 待入場':' 待放':draftMoves[id]?' •':'');b.setAttribute('aria-pressed',String(id===r));b.setAttribute('aria-label','選擇'+(side==='own'?'己方 ':'對手 ')+id);b.onclick=()=>selectRole(id);row.append(b);}return row;}));
  if(!isBoard&&$('trialReference').checked){const referenceEnd=s.baseTime+s.turn*2>getMeta().lesson.duration;const ref=playerPoint(getFrame(Math.min(getMeta().lesson.duration,s.baseTime+s.turn*2)),r);g.append(el('circle',{cx:ref.x,cy:ref.y,r:25,fill:'none',stroke:'#277b76','stroke-width':2,'stroke-dasharray':'5 4',opacity:.65}),el('text',{x:ref.x,y:ref.y-33,'text-anchor':'middle',fill:'#277b76','font-size':12},referenceEnd?'原課片段末位置':'原課示範'));}
