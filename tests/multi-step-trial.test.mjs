@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {cooperate} from '../dist/analysis/teammate-assist.js';import {applyTrialPlan} from '../dist/trial-plan.js';
+const own={C:{x:225,y:300},LW:{x:370,y:170},RW:{x:360,y:425},LD:{x:230,y:230},RD:{x:225,y:380}};
+const opponents={OC:{x:110,y:410},OL:{x:260,y:310},OR:{x:440,y:420},ODL:{x:520,y:180},ODR:{x:520,y:425}};
+test('staged C and LW persist simultaneously while AI leaves them untouched',()=>{const before={own,opponents,puck:{x:110,y:410},owner:'OC',turn:0,baseTime:0,direction:'defend',lessonId:'center-net-front',caseId:'front-covered',events:[],responses:[]};const staged={C:{x:260,y:345},LW:{x:345,y:190}};const raw=applyTrialPlan(before,{moves:staged},'C');const next=cooperate(before,raw,'C',{reserved:Object.keys(staged)});assert.deepEqual(next.own.C,staged.C);assert.deepEqual(next.own.LW,staged.LW);assert.equal(next.turn,1);});
