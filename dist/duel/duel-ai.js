@@ -1,63 +1,61 @@
-// CourtIQ Ice tactical policy v0.2: role assignments, space and passing.
-// Deterministic heuristics, not calibrated real-match predictions.
+// CourtIQ Ice conservative tactical AI v0.3.
+// A role-based, spatially bounded baseline — NOT a trained hockey AI.
 import {OWN,OPP,distance,icePoint,laneDistance} from '../trial-model.js';
 import {actorSide} from './duel-core.js';
-const ids=[...OWN,...OPP],point=(p)=>({x:p.x,y:p.y});
-function toward(p,q,max){const d=distance(p,q);return d<1?point(p):icePoint({x:p.x+(q.x-p.x)*Math.min(1,max/d),y:p.y+(q.y-p.y)*Math.min(1,max/d)});}
-const goal=team=>({x:team==='own'?890:110,y:300});
+const IDS=[...OWN,...OPP];
 const at=(s,id)=>s[actorSide(id)][id];
-function laneBlocked(s,a,b,team){
- return Object.entries(s[team==='own'?'opponents':'own']).some(([,p])=>{const q=laneDistance(p,a,b);return q.u>.08&&q.u<.92&&q.distance<26;});
-}
-function pickPass(s,carrier,team){
- const from=at(s,carrier),g=goal(team);
- return (team==='own'?OWN:OPP).filter(id=>id!==carrier).map(id=>{
- const p=at(s,id),clear=!laneBlocked(s,from,p,team),progress=distance(from,g)-distance(p,g),spacing=distance(from,p);
- return {id,score:(clear?35:-100)+progress*.38-Math.abs(spacing-125)*.12};
- }).sort((a,b)=>b.score-a.score)[0];
-}
-function desired(s,role){
- const team=actorSide(role),ours=team==='own'?OWN:OPP,enemies=team==='own'?OPP:OWN;
- const p=at(s,role),carrier=s.owner,withPuck=carrier&&actorSide(carrier)===team;
- const ownGoal=goal(team==='own'?'opponents':'own'),attackGoal=goal(team);
- const rank=ours.indexOf(role),defender=rank>=3;
- if(withPuck){
-   // Defensive players hold shape instead of blindly following possession.
-   if(defender) return {x:team==='own'?Math.min(620,p.x):Math.max(380,p.x),y:rank===3?220:380};
-   if(role===carrier)return attackGoal;
-   const carrierP=at(s,carrier),x=carrierP.x+(team==='own'?90:-90);
-   return {x:Math.max(65,Math.min(935,x)),y:rank===1?170:rank===2?430:300};
- }
- // Defending: C protects slot, defenders divide puck and weak-side coverage, wings guard high lanes.
- const threats=enemies.filter(id=>id!==carrier).map(id=>({id,p:at(s,id),d:distance(at(s,id),ownGoal)})).sort((a,b)=>a.d-b.d);
- const puck=s.puck;
- if(rank===0)return {x:team==='own'?205:795,y:Math.max(230,Math.min(370,threats[0]?.p.y||300))};
- if(rank===3)return puck;
- if(rank===4)return {x:team==='own'?205:795,y:puck.y<300?355:245};
- return {x:team==='own'?375:625,y:rank===1?195:405};
+const goal=side=>({x:side==='own'?890:110,y:300});
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+function toward(a,b,step){const d=distance(a,b);return d<1?{...a}:icePoint({x:a.x+(b.x-a.x)*Math.min(step/d,1),y:a.y+(b.y-a.y)*Math.min(step/d,1)});}
+function passLaneOpen(s,carrier,target){
+ const side=actorSide(carrier),from=at(s,carrier),to=at(s,target);
+ return !Object.values(s[side==='own'?'opponents':'own']).some(p=>{const l=laneDistance(p,from,to);return l.u>.1&&l.u<.9&&l.distance<27;});
 }
 export function planBaselineAI(state,{policy='press'}={}){
  if(!['press','hold'].includes(policy))throw Error('Unknown policy');
- const aiIds=ids.filter(id=>!state.controlledPlayers.includes(id));
- if(policy==='hold')return aiIds.map(role=>({type:'hold',role}));
- const carrier=state.owner,carrierAI=carrier&&aiIds.includes(carrier);
- let pass=null;
- if(carrierAI){
-   const team=actorSide(carrier),p=at(state,carrier),g=goal(team),nearGoal=distance(p,g)<230;
-   const receiver=pickPass(state,carrier,team),block=laneBlocked(state,p,g,team);
-   if(receiver&&receiver.score>27&&(block||nearGoal))pass={type:'pass',role:carrier,to:receiver.id};
+ const ai=IDS.filter(id=>!state.controlledPlayers.includes(id));
+ if(policy==='hold')return ai.map(role=>({role,type:'hold'}));
+ const carrier=state.owner,carrierSide=carrier?actorSide(carrier):null;
+ // Select a single chasing defender, never the entire five-player unit.
+ const pressure={};
+ for(const side of ['own','opponents']){
+   if(carrierSide===side)continue;
+   const members=side==='own'?OWN:OPP;
+   // A closer defender is preferred; no cross-ice teleporting or automatic pursuit.
+   const pool=members.filter(id=>ai.includes(id)&&(members.indexOf(id)>=3||distance(at(state,id),state.puck)<85));
+   const nearest=pool.map(id=>({id,d:distance(at(state,id),state.puck)})).sort((a,b)=>a.d-b.d)[0];
+   if(nearest&&nearest.d<=120)pressure[side]=nearest.id;
  }
- return aiIds.map(role=>{
-   if(pass?.role===role)return pass;
-   const p=at(state,role),q=desired(state,role);
-   const step=role===carrier?Math.min(32,55*state.tickSeconds):Math.min(25,50*state.tickSeconds);
-   const to=toward(p,q,step);
-   return distance(p,to)<2?{type:'hold',role}:{type:'move',role,to};
- });
+ const actions=[];
+ for(const role of ai){
+   const side=actorSide(role),team=side==='own'?OWN:OPP,idx=team.indexOf(role),p=at(state,role);
+   const attacking=carrierSide===side;
+   if(role===carrier){
+     // Avoid constant goalward drift; take space only with a local, clear lane.
+     const g=goal(side),nearOpponent=Object.values(state[side==='own'?'opponents':'own']).some(q=>distance(q,p)<90);
+     const candidate={x:p.x+(side==='own'?28:-28),y:p.y+(300-p.y)*.12};
+     if(!nearOpponent&&distance(p,g)>120){actions.push({type:'move',role,to:toward(p,candidate,Math.min(18,35*state.tickSeconds))});continue;}
+     const receivers=team.filter(id=>id!==role&&ai.includes(role)&&distance(p,at(state,id))>=45&&distance(p,at(state,id))<=210&&passLaneOpen(state,role,id));
+     const preferred=receivers.sort((a,b)=>Math.abs(at(state,a).y-p.y)-Math.abs(at(state,b).y-p.y))[0];
+     actions.push(preferred?{type:'pass',role,to:preferred}:{type:'hold',role});continue;
+   }
+   // Keep shape in neutral or loose-puck situations.
+   if(!carrier||attacking){actions.push({type:'hold',role});continue;}
+   if(pressure[side]===role){
+     const q=state.puck;
+     // Stay outside the carrier and stop short rather than stack on the puck.
+     const stop=toward(p,q,Math.min(19,34*state.tickSeconds));
+     actions.push(distance(p,stop)>=3?{type:'move',role,to:stop}:{type:'hold',role});continue;
+   }
+   // All remaining players keep their current zone and coverage;
+   // no absolute coordinate 'home' that pulls them unrealistically across the rink.
+   actions.push({type:'hold',role});
+ }
+ return actions;
 }
 export function explainAI(state,actions){
  const pass=actions.find(a=>a.type==='pass');
- if(pass)return `AI 判斷持球路線受到限制，嘗試傳球給 ${pass.to}。這是啟發式戰術選擇，並非成功率預測。`;
- if(state.owner&&actions.some(a=>a.role===state.owner&&a.type==='move'))return 'AI 持球者嘗試推進；其他球員依照位置分工維持支援與防守覆蓋。';
- return 'AI 根據持球方、球員職責和球門前危險區域調整站位；沒有要求所有人追球。';
+ if(pass)return 'AI 觀察到持球路線受阻，嘗試向 '+pass.to+' 傳球；這是簡化的安全接應判斷。';
+ const movers=actions.filter(a=>a.type==='move').map(a=>a.role);
+ return movers.length?'AI 只安排局部持球推進或最近防守者施壓（'+movers.join('、')+'）；其他球員守住現有站位。':'當前沒有足夠理由改變站位，AI 選擇保持隊形。';
 }
