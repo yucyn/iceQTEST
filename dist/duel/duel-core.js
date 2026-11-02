@@ -50,6 +50,15 @@ export function stepDuel(before,playerActions=[],aiActions=[],opts={}){
     const blocked=defenders.map(([id,p])=>{const t=len?Math.max(0,Math.min(1,((p.x-origin.x)*dx+(p.y-origin.y)*dy)/len)):0;return {id,t,d:Math.hypot(p.x-(origin.x+t*dx),p.y-(origin.y+t*dy))};}).filter(x=>x.t>.08&&x.t<.92&&x.d<22).sort((a,b)=>a.t-b.t)[0];
     next.owner=blocked?.id||a.to;events.push({type:blocked?'intercept':'pass',from:a.role,to:next.owner});
   }
+  // Puck retrieval: a loose puck can be picked up by the nearest skater.
+  // Controlled possession is not stolen merely by occupying the same coordinates:
+  // physical challenges require a future contested-possession model.
+  if(!next.owner){
+    const candidates=IDs.map(id=>({id,p:next[side(id)][id]}))
+      .map(x=>({...x,d:distance(x.p,next.puck)}))
+      .filter(x=>x.d<=22).sort((a,b)=>a.d-b.d||a.id.localeCompare(b.id));
+    if(candidates.length){next.owner=candidates[0].id;events.push({type:'pickup',to:next.owner});}
+  }
   if(next.owner)next.puck=point(next[side(next.owner)][next.owner]);
   next.tick=before.tick+1;
   next.lastTurn={playerActions:clone(playerActions),aiActions:clone(aiActions),events};
