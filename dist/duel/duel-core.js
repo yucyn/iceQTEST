@@ -26,6 +26,8 @@ export function legalActions(state,actions,allowed, {maxStep=70}={}){
       if(!a.to||!insideIce(a.to))throw Error('Move off ice');
       const p=(side(a.role)==='own'?state.own:state.opponents)[a.role];
       if(distance(p,a.to)>maxStep*state.tickSeconds+1e-6)throw Error('Move exceeds speed limit');
+    }else if(a.type==='challenge'){
+      if(!state.owner||side(state.owner)===side(a.role)||distance(state[side(a.role)][a.role],state.puck)>45)throw Error('Not in range to challenge puck carrier');
     }else if(a.type==='pass'){
       if(a.role!==state.owner||!IDs.includes(a.to)||side(a.to)!==side(a.role)||a.to===a.role)throw Error('Invalid pass');
     }else if(a.type!=='hold')throw Error('Invalid action type');
@@ -58,6 +60,16 @@ export function stepDuel(before,playerActions=[],aiActions=[],opts={}){
       .map(x=>({...x,d:distance(x.p,next.puck)}))
       .filter(x=>x.d<=22).sort((a,b)=>a.d-b.d||a.id.localeCompare(b.id));
     if(candidates.length){next.owner=candidates[0].id;events.push({type:'pickup',to:next.owner});}
+  }
+  // Simplified contested puck challenge: proximity is necessary but not automatic possession.
+  // Compare end-of-turn distance; deterministic contest is illustrative.
+  const challenges=combined.filter(a=>a.type==='challenge');
+  if(!passes.length&&next.owner&&challenges.length){
+    const carrier=next[side(next.owner)][next.owner];
+    const valid=challenges.filter(a=>side(a.role)!==side(next.owner))
+      .map(a=>({id:a.role,d:distance(next[side(a.role)][a.role],carrier)}))
+      .filter(x=>x.d<=25).sort((a,b)=>a.d-b.d);
+    if(valid.length){const winner=valid[0].id;next.owner=winner;events.push({type:'takeaway',to:winner});}
   }
   if(next.owner)next.puck=point(next[side(next.owner)][next.owner]);
   next.tick=before.tick+1;
