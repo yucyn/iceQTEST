@@ -54,6 +54,13 @@ export function mountExperiences({getFrame,getMeta,selectSource}){
     g.append(el('circle',{cx:zone.p.x,cy:zone.p.y,r:42,fill:'none',stroke:'#cd4742','stroke-width':3,'stroke-dasharray':'7 5'}));
     g.append(el('text',{x:zone.p.x,y:zone.p.y-48,'text-anchor':'middle','font-size':16,'font-weight':700,fill:'#a4312d'},zone.name+'注意'));
   }
+  // Draw observable AI teammate movement instead of hiding cooperation in text.
+  const latest=trial();
+
+  for(const r of (latest?.responses||[]).filter(x=>OWN.includes(x.id)&&x.from&&x.to&&distance(x.from,x.to)>2)){
+    g.append(el('line',{x1:r.from.x,y1:r.from.y,x2:r.to.x,y2:r.to.y,stroke:'#23957c','stroke-width':4,'stroke-dasharray':'9 5'}));
+    g.append(el('circle',{cx:r.to.x,cy:r.to.y,r:8,fill:'#23957c',opacity:.85}));
+  }
   svg.append(g);
  }
  const boardMenu=document.createElement('section');boardMenu.id='boardContextMenu';boardMenu.hidden=true;boardMenu.className='board-context-menu';boardMenu.setAttribute('role','dialog');boardMenu.setAttribute('aria-label','球員戰術工具');boardMenu.innerHTML=`<header><strong id="boardMenuTitle">球員工具</strong><button data-menu-close aria-label="關閉球員工具">×</button></header><div class="menu-player-picks" id="boardMenuPlayers"></div><div class="menu-action-picks"><button data-menu-tool="solid">→ 實線位移</button><button data-menu-tool="carry">〰 波浪帶球</button><button data-menu-tool="pass">⇢ 虛線傳球</button><button data-menu-puck>● 移動所選冰球</button><button data-menu-add-puck>＋ 新增冰球</button><button data-menu-remove-puck>移除所選冰球</button><button data-menu-bench>球員移回席位</button><button data-menu-give>交球給所選球員</button><button data-menu-tool="shot">⇒ 雙線射門</button><button data-menu-undo-ink>撤銷畫線</button><button data-menu-clear-plan>清除本步安排</button><button data-menu-clear-ink>清除畫線</button></div><div class="menu-colors"><button data-menu-color="blue">● 藍筆</button><button data-menu-color="red">● 紅筆</button></div><section id="boardMenuPass"><strong>指定接球隊員</strong><div id="boardMenuReceivers"></div></section><small>位移可畫彎曲路線；長按球員隨時換工具。</small>`;document.body.append(boardMenu);
