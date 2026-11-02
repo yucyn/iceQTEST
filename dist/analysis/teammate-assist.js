@@ -37,16 +37,37 @@ export function cooperate(before,after,controlled,{maxStep=LIMIT}={}){
      if(distance(from,to)>3){next.own[chasing.id]=to;responses.push({id:chasing.id,from:{...from},to:{...to},body:chasing.id+' 繼續對持球者施壓。'});events.push(chasing.id+' 持續施壓。');}
    }
  }else if(after.owner&&OWN.includes(after.owner)){
-   const carrier=after.own[after.owner];
-   const receiver=other.filter(id=>['LW','RW','C'].includes(id)&&id!==after.owner).map(id=>({id,d:distance(after.own[id],carrier)})).sort((a,b)=>a.d-b.d)[0];
-   if(receiver&&receiver.d>145&&receiver.d<260){
-     const from=before.own[receiver.id];
-     const target={x:Math.max(55,Math.min(945,carrier.x+65)),y:from.y};
-     const to=toward(from,target,Math.min(maxStep*.7,22));
-     if(distance(from,to)>3){next.own[receiver.id]=to;responses.push({id:receiver.id,from:{...from},to:{...to},body:receiver.id+' 向持球隊友提供接應位置。'});events.push(receiver.id+' 前往接應。');}
+   // Attack: the puck carrier must keep possession; unselected teammates look for support.
+   // A close receiver may move into an open lane, not automatically advance toward the goal.
+   const carrierId=after.owner,carrier=after.own[carrierId];
+   const candidates=other.filter(id=>id!==carrierId);
+   const planned=candidates.map(id=>{
+     const p=after.own[id],d=distance(p,carrier);
+     // Prefer a nearby support player; allow movement even when within 145 units.
+     const target=icePoint({
+       x:Math.max(65,Math.min(935,carrier.x+Math.max(-85,Math.min(85,p.x-carrier.x)))),
+       y:Math.max(75,Math.min(525,p.y+(p.y>=carrier.y?18:-18)))
+     });
+     const defenders=Object.values(after.opponents);
+     const oldPressure=Math.min(...defenders.map(q=>distance(q,p)));
+     const newPressure=Math.min(...defenders.map(q=>distance(q,target)));
+     const gain=newPressure-oldPressure;
+     return {id,p,target,d,gain,score:Math.abs(d-115)+Math.max(0,45-newPressure)*2};
+   }).filter(x=>x.d<270&&x.d>25&&distance(x.p,x.target)>8)
+     .sort((a,b)=>a.score-b.score);
+   const selected=candidates.length?planned[0]:null;
+   if(selected){
+     const from=before.own[selected.id],to=toward(from,selected.target,Math.min(maxStep,26));
+     if(distance(from,to)>3){
+       next.own[selected.id]=to;
+       responses.push({id:selected.id,from:{...from},to:{...to},body:selected.id+' 向 '+carrierId+' 提供側向接應，維持傳球選項。'});
+       events.push(selected.id+' 移動形成接應。');
+     }
    }
+
  }
  if(next.owner&&OWN.includes(next.owner))next.puck={...next.own[next.owner]};
+ if(!responses.length){events.push('AI 隊友保持現有站位：尚未找到需要移動且不破壞分工的補位或接應。');}
  next.responses=[...(next.responses||[]),...responses];
  next.events=[...(next.events||[]),...events];
  return next;
