@@ -8,7 +8,7 @@ let html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 html=html.replace(/<link rel="stylesheet" href="([^"]+)">/g,(_,name)=>'<style>'+fs.readFileSync(path.join(root,name),'utf8')+'</style>');
 html=html.replace(/<script type="module" src="app.js"><\/script>/,'<script type="importmap">'+JSON.stringify({imports})+'</script><script type="module">import "courtiq/app.js";</script>');
 if(!html.includes('type="importmap"'))throw Error('No entry module replaced');
-html=html.replace('<title>CourtIQ Ice｜跑位學習室</title>','<title>備課預覽｜CourtIQ 原版課程介面</title>').replace('<body>','<body><div style="padding:12px 20px;background:#e3eee4;color:#20554e;font:14px system-ui">備課待確認：第11課 · 使用與正式學習室相同的介面及程式，尚未發布正式課程。此離線檔不含教材室；修改請回到對話。</div>');
+html=html.replace('<title>CourtIQ Ice｜跑位學習室</title>','<title>備課預覽｜CourtIQ 原版課程介面</title>').replace('<body>','<body><div style="padding:12px 20px;background:#e3eee4;color:#20554e;font:14px system-ui">動態備課預覽：第11課 · 使用與正式學習室相同的介面及程式，尚未發布正式課程。此離線檔不含教材室；修改請回到對話。</div>');
 html=html.replace('<a class="text-button" href="author.html">教材製作室</a>','');
 fs.writeFileSync('dist/prep-winger-full.html',html);
 // Every dependency resolves within the import map; this file requires no server.
