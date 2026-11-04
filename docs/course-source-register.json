@@ -297,8 +297,8 @@
       "sha256": "5214040f45a4346c75a0d8407a722bf95c95cd7171ef44fabd8e97ab7d7db577",
       "duplicateReview": "與現有10課標題、情境及來源比對，未見同來源記錄。與第10課同屬自區防守，但主角為邊鋒高位封線，而非中鋒門前與後衛交接。",
       "durationSeconds": 37.333333,
-      "reviewStatus": "dynamic-preview-audio-pending",
-      "notes": "2026-11-04動態備課：初始站位依原片錨點換算，C維持低位中路。三情境為高角調整、錯誤下沉與沿牆切入、後衛取得球權與第一傳。片段範圍約略；10秒課程節奏與傳球時刻為教學重畫；語音未逐字核對。",
+      "reviewStatus": "audio-transcribed-caption-compared",
+      "notes": "2026-11-04動態備課：初始站位依原片錨點換算，C維持低位中路。三情境為高角調整、錯誤下沉與沿牆切入、後衛取得球權與第一傳。片段範圍約略；10秒課程節奏與傳球時刻為教學重畫；語音未逐字核對。 語音已轉錄並對照字幕；第三情境由LD已持球開始，移除OC傳給LD的假動作。",
       "sourceAssetId": "sha256:5214040f45a4346c75a0d8407a722bf95c95cd7171ef44fabd8e97ab7d7db577",
       "originalFileName": "ScreenRecording_11-03-2026 18-47-58_1.mp4",
       "sourceSegments": [
@@ -320,7 +320,12 @@
           "endSeconds": 30,
           "timing": "約略原片範圍；非10秒動畫時間"
         }
-      ]
+      ],
+      "audioReview": {
+        "record": "docs/preparation/winger-audio-review.md",
+        "method": "本機tiny.en轉錄並對照影片字幕",
+        "remaining": "開頭及末段部分字句由字幕補充，未宣稱逐字聽辨完成"
+      }
     }
   ]
 }
