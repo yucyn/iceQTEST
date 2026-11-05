@@ -193,7 +193,7 @@ function update(dt){
    const contest=g.contest;
    if(contest.attacker!==challenger.id||contest.owner!==current.id){contest.attacker=challenger.id;contest.owner=current.id;contest.elapsed=0;}
    contest.elapsed+=dt;
-   const needed=challenger===selected?.3:.6;
+   const needed=challenger===selected ? 0.3 : 0.6;
    if(contest.elapsed>=needed){receivePuck(challenger,' 近距離斷球！');info('球權轉換','持球者遭到逼搶，防守者成功取得球權。','auto-tackle'+Math.floor(g.time));}
   }else g.contest={attacker:null,owner:null,elapsed:0};
  }else g.contest={attacker:null,owner:null,elapsed:0};
