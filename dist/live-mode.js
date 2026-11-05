@@ -5,7 +5,7 @@ const keys=new Set();let analog={x:0,y:0};let game,frame=0,last=0,acc=0,replayIn
 const roles=['C','LW','RW','LD','RD'];
 function player(team,i,x,y){return {id:team+roles[i],team,role:roles[i],x,y,vx:0,vy:0,r:R,seek:null};}
 const START=[[430,300],[318,165],[318,435],[215,245],[215,355],[590,300],[695,165],[695,435],[790,245],[790,355]];
-function newGame(){game={players:START.map(([x,y],i)=>player(i<5?'H':'A',i%5,x,y)),puck:{x:446,y:300,vx:0,vy:0,owner:'HC',flight:null},selected:'HC',running:false,mode:'play',time:0,score:[0,0],history:[],message:'開球準備。按開始進行即時對弈。',coach:{title:'觀察位置',text:'按開始，注意持球者與防守者之間的距離。'},lastCoach:'',cool:0,resetIn:0,stealCooldown:0};keys.clear();analog={x:0,y:0};setKnob(0,0);renderUI();draw();}
+function newGame(){game={players:START.map(([x,y],i)=>player(i<5?'H':'A',i%5,x,y)),puck:{x:446,y:300,vx:0,vy:0,owner:'HC',flight:null},selected:'HC',running:false,mode:'play',time:0,score:[0,0],history:[],message:'開球準備。按開始進行即時對弈。',coach:{title:'觀察位置',text:'按開始，注意持球者與防守者之間的距離。'},lastCoach:'',cool:0,resetIn:0,stealCooldown:0,contest:{attacker:null,owner:null,elapsed:0}};keys.clear();analog={x:0,y:0};setKnob(0,0);renderUI();draw();}
 const byId=id=>game.players.find(p=>p.id===id),carrier=()=>byId(game.puck.owner);
 function setting(id){return Number($(id).value)||1;}
 function info(title,text,tag){if(game.lastCoach===tag)return;game.lastCoach=tag;game.coach={title,text};$('coachTitle').textContent=title;$('coachText').textContent=text;}
@@ -34,7 +34,7 @@ function guide(){
   else info('回防站位','紅隊持球。切換防守者或向左側收縮，避免中路被突破。','defend');
  }
 }
-function resetFaceoff(scored){const p=game.players;START.forEach((a,i)=>{Object.assign(p[i],{x:a[0],y:a[1],vx:0,vy:0,seek:null})});game.puck={x:446,y:300,vx:0,vy:0,owner:scored==='H'?'AC':'HC',flight:null};game.selected='HC';game.cool=1.0;game.stealCooldown=0;game.lastCoach='';}
+function resetFaceoff(scored){const p=game.players;START.forEach((a,i)=>{Object.assign(p[i],{x:a[0],y:a[1],vx:0,vy:0,seek:null})});game.puck={x:446,y:300,vx:0,vy:0,owner:scored==='H'?'AC':'HC',flight:null};game.selected='HC';game.cool=1.0;game.stealCooldown=0;game.contest={attacker:null,owner:null,elapsed:0};game.lastCoach='';}
 function passTo(id){
  if(!game.running||game.mode!=='play')return;
  const from=carrier(),to=byId(id);
@@ -63,22 +63,22 @@ function steal(){
  if(game.stealCooldown>0){message('搶球動作冷卻中。');return;}
  const defender=byId(game.selected),owner=carrier();
  if(!defender||defender.team!=='H')return;
- game.stealCooldown=.4;
  if(!owner){
   const d=dist(defender,game.puck);
-  if(d<=41){game.puck.owner=defender.id;game.puck.flight=null;game.puck.vx=0;game.puck.vy=0;game.cool=.45;message(defender.role+' 收下自由球！');renderUI();}
+  if(d<=43){receivePuck(defender,' 收下自由球！');}
   else message('尚未接近冰球，請先滑向球的位置。');
   return;
  }
  if(owner.team==='H'){message('目前由青隊控球，不需要搶球。');return;}
  const distance=dist(defender,owner);
- if(distance>54){message('尚未進入搶球範圍（54）。請先靠近，或點選離持球者最近的青隊球員。');return;}
+ if(distance>54){message('距離太遠，請先靠近持球者。');return;}
  // Distance and facing influence a deterministic tackle range; high-speed poke checks have longer reach.
  const relativeSpeed=Math.hypot(defender.vx-owner.vx,defender.vy-owner.vy);
  const reach=46+Math.min(8,relativeSpeed*.04);
  if(distance>reach){message('搶球距離不足，繼續逼近。');return;}
- game.puck.owner=defender.id;game.puck.flight=null;game.puck.vx=0;game.puck.vy=0;game.cool=.6;
- message(defender.role+' 成功搶球！');info('球權轉換','成功搶球後，觀察兩側隊友的出球路線。','tackle'+Math.floor(game.time));renderUI();
+ game.stealCooldown=.45;
+ receivePuck(defender,' 成功搶球！');
+ info('球權轉換','成功搶球後，觀察兩側隊友的出球路線。','tackle'+Math.floor(game.time));
 }
 function shoot(){if(!game.running||game.mode!=='play')return;const owner=carrier();if(!owner||owner.team!=='H'){message('青隊持球後才能射門。');return;}const v=norm(910-owner.x,300-owner.y);game.puck.owner=null;game.puck.flight={team:'H',shot:true,time:0};game.puck.x=owner.x+v.x*20;game.puck.y=owner.y+v.y*20;game.puck.vx=v.x*590;game.puck.vy=v.y*590;game.cool=.4;message(owner.role+' 射門！');info('射門路線','觀察守門員與防守者是否封住射門角度。','shot-action');}
 function switchPlayer(){const h=game.players.filter(p=>p.team==='H');let i=h.findIndex(p=>p.id===game.selected);game.selected=h[(i+1)%h.length].id;message('控制球員：'+byId(game.selected).role);renderUI();}
@@ -97,7 +97,7 @@ function formation(p,owner,own){
  return {x:clamp(center.x+dir*gap,105,855),y:clamp(baseY+(center.y-300)*.34,90,510)};
 }
 function receivePuck(player,label){
- game.puck.owner=player.id;game.puck.flight=null;game.puck.vx=game.puck.vy=0;game.cool=.25;
+ game.puck.owner=player.id;game.puck.flight=null;game.puck.vx=game.puck.vy=0;game.cool=.4;game.contest={attacker:null,owner:null,elapsed:0};
  if(player.team==='H')game.selected=player.id;
  message((player.team==='H'?'青隊 ':'紅隊 ')+player.role+label);renderUI();
 }
@@ -174,14 +174,29 @@ function update(dt){
    }
    puck.x=clamp(puck.x,65,895);puck.vx*=-.62;puck.flight=null;
   }
-  if(!puck.owner){puck.vx*=Math.max(.85,1-dt*.24);puck.vy*=Math.max(.85,1-dt*.24);}
+  if(!puck.owner){
+   puck.vx*=Math.max(.85,1-dt*.24);puck.vy*=Math.max(.85,1-dt*.24);
+   // Even after a missed pass, any skater can collect a loose puck by reaching it.
+   if(!puck.flight&&g.cool<=0){const finder=g.players.map(p=>({p,d:dist(p,puck)})).sort((a,b)=>a.d-b.d)[0];if(finder&&finder.d<30)receivePuck(finder.p,' 取得自由球！');}
+  }
  }
  const current=carrier();
+ // A nearby defender must actually make a contested stick-check. Sustained close
+ // proximity earns possession without random frame-by-frame luck. Manual L is instant.
  if(current&&g.cool<=0){
-  const opponents=g.players.filter(p=>p.team!==current.team).sort((a,b)=>dist(a,current)-dist(b,current));
-  const nearest=opponents[0];
-  if(nearest&&dist(nearest,current)<28&&nearest.team==='A'&&Math.random()<dt*.34*difficulty)receivePuck(nearest,' 自動斷球！');
- }
+  const opponents=g.players.filter(p=>p.team!==current.team);
+  const selectedDefender=selected.team!==current.team&&dist(selected,current)<38?selected:null;
+  const nearest=opponents.sort((a,b)=>dist(a,current)-dist(b,current))[0];
+  const challenger=selectedDefender||nearest;
+  const reach=challenger===selected?38:28;
+  if(challenger&&dist(challenger,current)<=reach){
+   const contest=g.contest;
+   if(contest.attacker!==challenger.id||contest.owner!==current.id){contest.attacker=challenger.id;contest.owner=current.id;contest.elapsed=0;}
+   contest.elapsed+=dt;
+   const needed=challenger===selected?.3:.6;
+   if(contest.elapsed>=needed){receivePuck(challenger,' 近距離斷球！');info('球權轉換','持球者遭到逼搶，防守者成功取得球權。','auto-tackle'+Math.floor(g.time));}
+  }else g.contest={attacker:null,owner:null,elapsed:0};
+ }else g.contest={attacker:null,owner:null,elapsed:0};
  guideTimer+=dt;if(guideTimer>.65){guide();guideTimer=0;}
  if(Math.floor(g.time*10)%3===0)g.history.push(snapshot());if(g.history.length>1200)g.history.shift();
  if(Math.floor(g.time*10)%5===0)renderUI();
