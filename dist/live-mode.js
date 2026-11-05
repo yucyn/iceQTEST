@@ -221,7 +221,28 @@ function stopReplay(){game.mode='play';game.running=false;message('回放已結�
 function tick(now){const dt=Math.min(.05,(now-last)/1000||0);last=now;if(game.mode==='replay'){acc+=dt;while(acc>=.12&&game.mode==='replay'){replayStep();acc-=.12;}}else if(game.running){acc+=dt;let loops=0;while(acc>=1/60&&loops++<4){update(1/60);acc-=1/60;}}draw();frame=requestAnimationFrame(tick);}
 $('toggle').addEventListener('click',()=>{game.running=!game.running;message(game.running?'即時對弈進行中。':'已暫停。');renderUI();});
 $('reset').addEventListener('click',()=>{newGame();message('已重新開局。');});
-$('switch').addEventListener('click',switchPlayer);$('pass').addEventListener('click',pass);$('shoot').addEventListener('click',shoot);$('steal').addEventListener('click',steal);
+$('switch').addEventListener('click',switchPlayer);
+// Fire actions on touch-down rather than waiting for a synthetic click. This allows
+// a second finger to pass, shoot or poke-check while the first holds the joystick.
+// Mouse and keyboard still use native click; suppress only duplicate touch clicks.
+function bindLiveAction(id,action){
+ const button=$(id);let lastTouch=-Infinity;
+ button.style.touchAction='manipulation';
+ button.addEventListener('pointerdown',e=>{
+  if(e.pointerType!=='touch'&&e.pointerType!=='pen')return;
+  if(!e.isPrimary && !e.pointerId)return;
+  e.preventDefault();
+  lastTouch=performance.now();
+  action();
+ });
+ button.addEventListener('click',e=>{
+  if(performance.now()-lastTouch<650){e.preventDefault();return;}
+  action();
+ });
+}
+bindLiveAction('pass',pass);
+bindLiveAction('shoot',shoot);
+bindLiveAction('steal',steal);
 $('replay').addEventListener('click',()=>{if(game.mode==='replay'){stopReplay();return;}if(game.history.length<3)return;game.running=false;game.mode='replay';replayIndex=0;acc=0;message('正在回放本局動作。');renderUI();});
 canvas.addEventListener('pointerdown',e=>{if(game.mode==='replay')return;const b=canvas.getBoundingClientRect(),p={x:(e.clientX-b.left)*960/b.width,y:(e.clientY-b.top)*600/b.height};const h=game.players.filter(x=>x.team==='H').sort((a,b)=>dist(a,p)-dist(b,p));if(h[0]&&dist(h[0],p)<30){game.selected=h[0].id;message('控制球員：'+h[0].role);renderUI();}else{byId(game.selected).seek={x:clamp(p.x,65,895),y:clamp(p.y,73,527)};}canvas.focus();});
 const bindKeys={arrowup:'up',w:'up',arrowdown:'down',s:'down',arrowleft:'left',a:'left',arrowright:'right',d:'right'};
@@ -231,7 +252,7 @@ const joy=$('joystick'),knob=$('joyKnob');let activeJoyPointer=null;
 function setKnob(x,y){if(!knob)return;knob.style.transform='translate('+(x*43)+'px,'+(y*43)+'px)';}
 function updateJoy(e){const rect=joy.getBoundingClientRect();const centerX=rect.left+rect.width/2,centerY=rect.top+rect.height/2;const radius=Math.max(1,Math.min(rect.width,rect.height)*.37);let x=(e.clientX-centerX)/radius,y=(e.clientY-centerY)/radius;const len=Math.hypot(x,y);if(len>1){x/=len;y/=len;}if(len<.12){x=0;y=0;}analog={x,y};setKnob(x,y);}
 function releaseJoy(){activeJoyPointer=null;analog={x:0,y:0};setKnob(0,0);}
-joy.addEventListener('pointerdown',e=>{e.preventDefault();activeJoyPointer=e.pointerId;joy.setPointerCapture(e.pointerId);updateJoy(e);});
+joy.addEventListener('pointerdown',e=>{if(activeJoyPointer!==null)return;e.preventDefault();activeJoyPointer=e.pointerId;joy.setPointerCapture(e.pointerId);updateJoy(e);});
 joy.addEventListener('pointermove',e=>{if(activeJoyPointer===e.pointerId)updateJoy(e);});
 for(const type of ['pointerup','pointercancel','lostpointercapture'])joy.addEventListener(type,e=>{if(activeJoyPointer===e.pointerId)releaseJoy();});
 joy.addEventListener('keydown',e=>{const key=e.key.toLowerCase();if(bindKeys[key]){e.preventDefault();keys.add(bindKeys[key]);}});
