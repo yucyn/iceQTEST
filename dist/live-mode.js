@@ -1,10 +1,10 @@
 const canvas=document.getElementById('rink'),ctx=canvas.getContext('2d');
 const $=id=>document.getElementById(id),W=960,H=600,HOME='#287c79',AWAY='#c86764',R=17;
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),norm=(x,y)=>{const d=Math.hypot(x,y)||1;return {x:x/d,y:y/d}};
-const keys=new Set();let game,frame=0,last=0,acc=0,replayIndex=0,guideTimer=0;
+const keys=new Set();let analog={x:0,y:0};let game,frame=0,last=0,acc=0,replayIndex=0,guideTimer=0;
 const roles=['C','LW','RW'];
 function player(team,i,x,y){return {id:team+roles[i],team,role:roles[i],x,y,vx:0,vy:0,r:R,seek:null};}
-function newGame(){game={players:[player('H',0,430,300),player('H',1,315,180),player('H',2,315,420),player('A',0,660,300),player('A',1,745,185),player('A',2,745,415)],puck:{x:446,y:300,vx:0,vy:0,owner:'HC',flight:null},selected:'HC',running:false,mode:'play',time:0,score:[0,0],history:[],message:'開球準備。按開始進行即時對弈。',coach:{title:'觀察位置',text:'按開始，注意持球者與防守者之間的距離。'},lastCoach:'',cool:0,resetIn:0};keys.clear();renderUI();draw();}
+function newGame(){game={players:[player('H',0,430,300),player('H',1,315,180),player('H',2,315,420),player('A',0,660,300),player('A',1,745,185),player('A',2,745,415)],puck:{x:446,y:300,vx:0,vy:0,owner:'HC',flight:null},selected:'HC',running:false,mode:'play',time:0,score:[0,0],history:[],message:'開球準備。按開始進行即時對弈。',coach:{title:'觀察位置',text:'按開始，注意持球者與防守者之間的距離。'},lastCoach:'',cool:0,resetIn:0};keys.clear();analog={x:0,y:0};setKnob(0,0);renderUI();draw();}
 const byId=id=>game.players.find(p=>p.id===id),carrier=()=>byId(game.puck.owner);
 function setting(id){return Number($(id).value)||1;}
 function info(title,text,tag){if(game.lastCoach===tag)return;game.lastCoach=tag;game.coach={title,text};$('coachTitle').textContent=title;$('coachText').textContent=text;}
@@ -44,7 +44,7 @@ function update(dt){
  const own=owner?.team;
  for(const p of g.players){
   if(p===selected){
-   const dx=(keys.has('right')?1:0)-(keys.has('left')?1:0),dy=(keys.has('down')?1:0)-(keys.has('up')?1:0);
+   const keyX=(keys.has('right')?1:0)-(keys.has('left')?1:0),keyY=(keys.has('down')?1:0)-(keys.has('up')?1:0);const dx=clamp(keyX+analog.x,-1,1),dy=clamp(keyY+analog.y,-1,1);
    if(dx||dy){const n=norm(dx,dy);moveTowards(p,{x:p.x+n.x*100,y:p.y+n.y*100},190,dt);p.seek=null;}
    else if(p.seek){moveTowards(p,p.seek,185,dt);if(dist(p,p.seek)<11)p.seek=null;}
    else {p.vx*=Math.max(.01,1-dt*5);p.vy*=Math.max(.01,1-dt*5);}
@@ -103,6 +103,14 @@ $('replay').addEventListener('click',()=>{if(game.mode==='replay'){stopReplay();
 canvas.addEventListener('pointerdown',e=>{if(game.mode==='replay')return;const b=canvas.getBoundingClientRect(),p={x:(e.clientX-b.left)*960/b.width,y:(e.clientY-b.top)*600/b.height};const h=game.players.filter(x=>x.team==='H').sort((a,b)=>dist(a,p)-dist(b,p));if(h[0]&&dist(h[0],p)<30){game.selected=h[0].id;message('控制球員：'+h[0].role);renderUI();}else{byId(game.selected).seek={x:clamp(p.x,65,895),y:clamp(p.y,73,527)};}canvas.focus();});
 const bindKeys={arrowup:'up',w:'up',arrowdown:'down',s:'down',arrowleft:'left',a:'left',arrowright:'right',d:'right'};
 window.addEventListener('keydown',e=>{const tag=e.target.tagName;if(['INPUT','SELECT','TEXTAREA'].includes(tag))return;const key=e.key.toLowerCase();if(bindKeys[key]){e.preventDefault();keys.add(bindKeys[key]);}else if(!e.repeat&&key==='q')switchPlayer();else if(!e.repeat&&key==='j')pass();else if(!e.repeat&&key==='k')shoot();else if(!e.repeat&&key===' '){e.preventDefault();if(game.mode!=='replay')$('toggle').click();}});
-window.addEventListener('keyup',e=>{const key=e.key.toLowerCase();if(bindKeys[key])keys.delete(bindKeys[key]);});window.addEventListener('blur',()=>keys.clear());
-document.querySelectorAll('[data-dir]').forEach(btn=>{const name=btn.dataset.dir;btn.addEventListener('pointerdown',e=>{e.preventDefault();btn.setPointerCapture(e.pointerId);keys.add(name);});for(const type of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(type,()=>keys.delete(name));});
+window.addEventListener('keyup',e=>{const key=e.key.toLowerCase();if(bindKeys[key])keys.delete(bindKeys[key]);});window.addEventListener('blur',()=>{keys.clear();releaseJoy();});
+const joy=$('joystick'),knob=$('joyKnob');let activeJoyPointer=null;
+function setKnob(x,y){if(!knob)return;knob.style.transform='translate('+(x*43)+'px,'+(y*43)+'px)';}
+function updateJoy(e){const rect=joy.getBoundingClientRect();const centerX=rect.left+rect.width/2,centerY=rect.top+rect.height/2;const radius=Math.max(1,Math.min(rect.width,rect.height)*.37);let x=(e.clientX-centerX)/radius,y=(e.clientY-centerY)/radius;const len=Math.hypot(x,y);if(len>1){x/=len;y/=len;}if(len<.12){x=0;y=0;}analog={x,y};setKnob(x,y);}
+function releaseJoy(){activeJoyPointer=null;analog={x:0,y:0};setKnob(0,0);}
+joy.addEventListener('pointerdown',e=>{e.preventDefault();activeJoyPointer=e.pointerId;joy.setPointerCapture(e.pointerId);updateJoy(e);});
+joy.addEventListener('pointermove',e=>{if(activeJoyPointer===e.pointerId)updateJoy(e);});
+for(const type of ['pointerup','pointercancel','lostpointercapture'])joy.addEventListener(type,e=>{if(activeJoyPointer===e.pointerId)releaseJoy();});
+joy.addEventListener('keydown',e=>{const key=e.key.toLowerCase();if(bindKeys[key]){e.preventDefault();keys.add(bindKeys[key]);}});
+joy.addEventListener('keyup',e=>{const key=e.key.toLowerCase();if(bindKeys[key])keys.delete(bindKeys[key]);});
 newGame();last=performance.now();frame=requestAnimationFrame(tick);
