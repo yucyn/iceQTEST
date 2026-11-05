@@ -14,3 +14,11 @@
 此儲存庫為公開儲存庫，備課分支也公開；不放原始影片、個人資料或機密內容。原始影片不包含於 Git 中。
 
 初始來源：CourtIQ Sites commit 4d9852f2e374d7259d8b92c3c6052d5999080bce（fix14）。此副本不包含 Sites hosting identity。
+
+## 每課來源留檔
+
+新增或修訂課程須同步更新 docs/course-source-register.json，留存來源、題名、情境、SHA-256（有原檔時）、重複檢查及教學重畫備註。npm test 會檢查所有課程均已登記。新影片先執行 node scripts/check-course-sources.mjs /absolute/path/video.mp4；相同檔案回傳退出碼2，停止另建重複課程。重新錄影與剪輯須人工比較來源與跑位，不能以沒有雜湊匹配當成未重複。詳見 docs/COURSE_SOURCES.md。
+
+## 學生端教學文案
+
+採教練直接指導語氣：說明看誰、站哪裡、何時接應與失位後果。避免「原片」「重畫」「錨點」「待核對」「播放至第幾秒可見」等製作說明；來源、座標方法與核對狀態保留在備課文件與來源登記。錯誤情境要明示失誤及造成的空間。

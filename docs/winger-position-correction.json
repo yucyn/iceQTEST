@@ -1,0 +1,95 @@
+{
+  "sourceFrameSeconds": 1,
+  "sourceAnchors": {
+    "blueLineY": 450,
+    "endBoardY": 765,
+    "leftBoardX": 33,
+    "rightBoardX": 477
+  },
+  "method": "rotate original lower goal to left goal; project corner points inside rounded rink",
+  "raw": {
+    "C": [
+      171,
+      703
+    ],
+    "LW": [
+      151,
+      613
+    ],
+    "RW": [
+      325,
+      598
+    ],
+    "LD": [
+      98,
+      739
+    ],
+    "RD": [
+      235,
+      750
+    ],
+    "OC": [
+      72,
+      755
+    ],
+    "OL": [
+      61,
+      645
+    ],
+    "OR": [
+      224,
+      724
+    ],
+    "ODL": [
+      114,
+      482
+    ],
+    "ODR": [
+      371,
+      482
+    ]
+  },
+  "mapped": {
+    "C": {
+      "x": 130.54,
+      "y": 205.41
+    },
+    "LW": {
+      "x": 261.97,
+      "y": 182.88
+    },
+    "RW": {
+      "x": 283.87,
+      "y": 378.83
+    },
+    "LD": {
+      "x": 77.97,
+      "y": 123.2
+    },
+    "RD": {
+      "x": 61.9,
+      "y": 277.48
+    },
+    "OC": {
+      "x": 63.69,
+      "y": 100.21
+    },
+    "OL": {
+      "x": 215.24,
+      "y": 81.53
+    },
+    "OR": {
+      "x": 99.87,
+      "y": 265.09
+    },
+    "ODL": {
+      "x": 453.27,
+      "y": 141.22
+    },
+    "ODR": {
+      "x": 453.27,
+      "y": 430.63
+    }
+  },
+  "limitations": "Approximate screen-based coordinates; static corrected layout only; audio and trajectories pending."
+}

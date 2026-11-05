@@ -1,0 +1,331 @@
+{
+  "schemaVersion": 1,
+  "courses": [
+    {
+      "courseId": "neutral-faceoff-regroup",
+      "number": "01",
+      "title": "中區爭球後的五人分工",
+      "category": "基礎接應",
+      "focus": "先理解五人分工",
+      "scenarios": [
+        {
+          "id": "default",
+          "label": "回傳與回繞"
+        }
+      ],
+      "sources": [
+        {
+          "label": "爭球分工背景：NHL Coaches Room",
+          "url": "https://www.nhl.com/news/former-nhl-coach-don-nachbaur-talks-faceoff-strategy-304811858"
+        }
+      ],
+      "sha256": null,
+      "duplicateReview": "舊課補登：來源依現有課程資料保留；原檔指紋待補。"
+    },
+    {
+      "courseId": "post-up-regroup",
+      "number": "02",
+      "title": "Post-Up 中區重新組織",
+      "category": "基礎接應",
+      "focus": "壓迫改變接應",
+      "scenarios": [
+        {
+          "id": "open",
+          "label": "邊線仍有空間"
+        },
+        {
+          "id": "pressure",
+          "label": "對手上搶邊鋒"
+        }
+      ],
+      "sources": [
+        {
+          "label": "Weiss Tech Hockey：Post-Up Regroup in Action",
+          "url": "https://weisstechhockey.com/post-up-regroup-in-action/"
+        }
+      ],
+      "sha256": null,
+      "duplicateReview": "舊課補登：來源依現有課程資料保留；原檔指紋待補。"
+    },
+    {
+      "courseId": "zone-breakout",
+      "number": "03",
+      "title": "自區出球與低位支援",
+      "category": "基礎接應",
+      "focus": "讀第一傳可用性",
+      "scenarios": [
+        {
+          "id": "wall",
+          "label": "同側接應可用"
+        },
+        {
+          "id": "reverse",
+          "label": "同側被封，後方換邊"
+        }
+      ],
+      "sources": [
+        {
+          "label": "IHS：Strong Side Breakout Drill（低位支援原則）",
+          "url": "https://www.icehockeysystems.com/hockey-drills/strong-side-breakout-drill"
+        }
+      ],
+      "sha256": null,
+      "duplicateReview": "舊課補登：來源依現有課程資料保留；原檔指紋待補。"
+    },
+    {
+      "courseId": "give-and-go",
+      "number": "04",
+      "title": "傳後移動與回傳判斷",
+      "category": "進攻選擇",
+      "focus": "傳完球的下一步",
+      "scenarios": [
+        {
+          "id": "return",
+          "label": "對手轉向球，回傳線開"
+        },
+        {
+          "id": "covered",
+          "label": "對手跟切入者"
+        }
+      ],
+      "sources": [
+        {
+          "label": "IHS：Give & Go（Pass & Move）",
+          "url": "https://www.icehockeysystems.com/blog/skill-breakdowns/give-and-go"
+        }
+      ],
+      "sha256": null,
+      "duplicateReview": "舊課補登：來源依現有課程資料保留；原檔指紋待補。"
+    },
+    {
+      "courseId": "two-on-one",
+      "number": "05",
+      "title": "局部二打一的攻擊選擇",
+      "category": "進攻選擇",
+      "focus": "讀近端後衛的選擇",
+      "scenarios": [
+        {
+          "id": "lane",
+          "label": "後衛留在中間"
+        },
+        {
+          "id": "challenge",
+          "label": "後衛壓持球者"
+        }
+      ],
+      "sources": [
+        {
+          "label": "IHS：2 on 1 Corner Traffic（讀防守與傳球線）",
+          "url": "https://www.icehockeysystems.com/hockey-drills/2-on-1-corner-traffic"
+        }
+      ],
+      "sha256": null,
+      "duplicateReview": "舊課補登：來源依現有課程資料保留；原檔指紋待補。"
+    },
+    {
+      "courseId": "defensive-side",
+      "number": "06",
+      "title": "防守側位置與補位",
+      "category": "防守分工",
+      "focus": "同時看人與球",
+      "scenarios": [
+        {
+          "id": "cut",
+          "label": "對手傳後切入"
+        },
+        {
+          "id": "carry",
+          "label": "對手繼續沿邊帶"
+        }
+      ],
+      "sources": [
+        {
+          "label": "IHS：D-Zone 1 on 1 Give and Go",
+          "url": "https://icehockeysystems.com/hockey-drills/d-zone-1-1-give-and-go"
+        }
+      ],
+      "sha256": null,
+      "duplicateReview": "舊課補登：來源依現有課程資料保留；原檔指紋待補。"
+    },
+    {
+      "courseId": "film-forecheck",
+      "number": "07",
+      "title": "前壓圍堵與三人分工",
+      "category": "前壓判讀",
+      "focus": "壓迫、封出口與中路保護",
+      "scenarios": [
+        {
+          "id": "angle",
+          "label": "第一人：限制中路出口"
+        },
+        {
+          "id": "reverse",
+          "label": "第二人：封住另一個出口"
+        },
+        {
+          "id": "middle",
+          "label": "第三人：保留中路層次"
+        }
+      ],
+      "sources": [
+        {
+          "fileName": "ScreenRecording_10-28-2026 19-04-08_1(2).mp4",
+          "kind": "uploaded",
+          "label": "來源：你提供的 Honest Hockey 前壓動畫；跑位與條件為依片整理"
+        }
+      ],
+      "sha256": null,
+      "duplicateReview": "舊課補登：來源依現有課程資料保留；原檔指紋待補。"
+    },
+    {
+      "courseId": "net-reverse-attack",
+      "number": "08",
+      "title": "進攻區低位循環與門後反向",
+      "category": "進攻選擇",
+      "focus": "先改變出口，再建立攻門角度",
+      "scenarios": [
+        {
+          "id": "low-cycle",
+          "label": "低位循環：傳到空間後，誰往內接？"
+        },
+        {
+          "id": "reverse-lane",
+          "label": "門後反向：先找傳球通道"
+        },
+        {
+          "id": "retrieve-attack",
+          "label": "再取球後：內側接應與高位出口"
+        }
+      ],
+      "sources": [
+        {
+          "fileName": "ScreenRecording_10-27-2026 14-58-15_1(1).mp4",
+          "kind": "user-video",
+          "label": "BENCHIQ / benchiq.hockey：Net Reverse & Attack（使用者提供 IG 螢幕錄影）"
+        }
+      ],
+      "sha256": null,
+      "duplicateReview": "舊課補登：來源依現有課程資料保留；原檔指紋待補。"
+    },
+    {
+      "courseId": "warmup-shots",
+      "number": "09",
+      "title": "暖身射門：轉向、輪轉與高位接應",
+      "category": "訓練輪轉",
+      "focus": "先看順序與傳球時機，再看出手",
+      "scenarios": [
+        {
+          "id": "punch-turn",
+          "label": "沿邊轉向：抬頭再找中路"
+        },
+        {
+          "id": "inside-rotation",
+          "label": "前鋒輪轉：一人靠門，一人拉開"
+        },
+        {
+          "id": "point-one-timer",
+          "label": "高位 One-Timer：接應與門前分工"
+        }
+      ],
+      "sources": [
+        {
+          "fileName": "ScreenRecording_10-31-2026 23-50-39_1.mp4",
+          "kind": "user-video",
+          "label": "BENCHIQ / maple dranik：Warm Up Shots（使用者提供 IG 螢幕錄影）"
+        }
+      ],
+      "sha256": null,
+      "duplicateReview": "舊課補登：來源依現有課程資料保留；原檔指紋待補。"
+    },
+    {
+      "courseId": "center-net-front",
+      "number": "10",
+      "title": "自區門後防守：中鋒守門前與後衛交接",
+      "category": "自區防守",
+      "focus": "先確認誰追球，再接住門前人",
+      "scenarios": [
+        {
+          "id": "front-covered",
+          "label": "門後已有後衛：中鋒接門前人"
+        },
+        {
+          "id": "recover-front",
+          "label": "延伸練習：誤追到門後，如何回補？"
+        },
+        {
+          "id": "far-post-handoff",
+          "label": "持球者繞出另一側：遠柱交接"
+        }
+      ],
+      "sources": [
+        {
+          "fileName": "ScreenRecording_11-01-2026 14-54-46_1.mp4",
+          "kind": "user-video",
+          "label": "getbenchwise：Center · D-zone（使用者提供 IG 錄影）"
+        }
+      ],
+      "sha256": null,
+      "duplicateReview": "舊課補登：來源依現有課程資料保留；原檔指紋待補。"
+    },
+    {
+      "courseId": "winger-hold-high",
+      "number": "11",
+      "title": "自區邊鋒：守住高位與封鎖傳球線",
+      "category": "自區防守",
+      "focus": "角落已有兩人，邊鋒守線不追球",
+      "scenarios": [
+        {
+          "id": "hold-high",
+          "label": "正確示範：邊鋒守住高角"
+        },
+        {
+          "id": "deny-wall",
+          "label": "錯誤示範：邊鋒下沉，對手切入"
+        },
+        {
+          "id": "point-and-outlet",
+          "label": "正確示範：後衛贏球，邊鋒接第一傳"
+        }
+      ],
+      "sources": [
+        {
+          "fileName": "ScreenRecording_11-03-2026 18-47-58_1.mp4",
+          "kind": "user-video",
+          "label": "projecthockey／danny_hype：IQ Check #1 · Wingers（使用者提供錄影）"
+        }
+      ],
+      "sha256": "5214040f45a4346c75a0d8407a722bf95c95cd7171ef44fabd8e97ab7d7db577",
+      "duplicateReview": "與現有10課標題、情境及來源比對，未見同來源記錄。與第10課同屬自區防守，但主角為邊鋒高位封線，而非中鋒門前與後衛交接。",
+      "durationSeconds": 37.333333,
+      "reviewStatus": "audio-transcribed-caption-compared",
+      "notes": "2026-11-04動態備課：初始站位依原片錨點換算，C維持低位中路。三情境為高角調整、錯誤下沉與沿牆切入、後衛取得球權與第一傳。片段範圍約略；10秒課程節奏與傳球時刻為教學重畫；語音未逐字核對。 語音已轉錄並對照字幕；第三情境由LD已持球開始，移除OC傳給LD的假動作。 預設hold-high情境已補齊取得球權及6–8秒第一傳，不須切換第三題才看到傳球。 2026-11-04學生端文字改為教練指導語氣；製作與來源說明留在備課紀錄。",
+      "sourceAssetId": "sha256:5214040f45a4346c75a0d8407a722bf95c95cd7171ef44fabd8e97ab7d7db577",
+      "originalFileName": "ScreenRecording_11-03-2026 18-47-58_1.mp4",
+      "sourceSegments": [
+        {
+          "scenarioId": "hold-high",
+          "startSeconds": 19,
+          "endSeconds": 26,
+          "timing": "約略原片範圍；非10秒動畫時間"
+        },
+        {
+          "scenarioId": "deny-wall",
+          "startSeconds": 9,
+          "endSeconds": 18,
+          "timing": "約略原片範圍；非10秒動畫時間"
+        },
+        {
+          "scenarioId": "point-and-outlet",
+          "startSeconds": 26,
+          "endSeconds": 30,
+          "timing": "約略原片範圍；非10秒動畫時間"
+        }
+      ],
+      "audioReview": {
+        "record": "docs/preparation/winger-audio-review.md",
+        "method": "本機tiny.en轉錄並對照影片字幕",
+        "remaining": "開頭及末段部分字句由字幕補充，未宣稱逐字聽辨完成"
+      }
+    }
+  ]
+}
