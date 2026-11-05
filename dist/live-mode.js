@@ -13,8 +13,8 @@ function message(s){game.message=s;$('status').textContent=s;}
 function renderUI(){
  $('home').textContent=game.score[0];$('away').textContent=game.score[1];
  const mm=Math.floor(game.time/60),ss=Math.floor(game.time%60);$('clock').textContent=String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0');
- $('toggle').textContent=game.running?'Ⅱ 暫停':'▶ 開始';$('toggle').disabled=game.mode==='replay';
- $('replay').textContent=game.mode==='replay'?'■ 結束回放':'▶ 回放';$('replay').disabled=game.mode!=='replay'&&game.history.length<3;
+ $('toggle').textContent=game.running?'暫停':'開始';$('toggle').disabled=game.mode==='replay';
+ $('replay').textContent=game.mode==='replay'?'結束回放':'回放';$('replay').disabled=game.mode!=='replay'&&game.history.length<3;
  const owner=carrier(),sel=byId(game.selected);$('details').textContent='球權：'+(owner?(owner.team==='H'?'青隊 ':'紅隊 ')+owner.role:'飛行中／自由球')+' · 控制 '+sel.role;
  const receivers=game.players.filter(p=>p.team==='H'&&p.id!==game.puck.owner);
  const old=$('receiver').value;$('receiver').replaceChildren(...receivers.map(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.role+' · '+(p.id===game.selected?'目前控制':'隊友');return o;}));if(receivers.some(p=>p.id===old))$('receiver').value=old;else {const preferred=receivers.find(p=>p.id!==game.selected);if(preferred)$('receiver').value=preferred.id;}
